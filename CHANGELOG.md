@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.13.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.11.0...v1.13.0) (2022-08-12)
+
+
+### Features
+
+* [VIC-795] added fork auto sync config ([5166ce2](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/5166ce26ed749d2abe3bd4c6515947bc7c79e420))
+* update tenant service definition ([95b763c](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/95b763c667ed4b8548becc8d91d5064a02c943ee))
+* upgrade keycloak to the latest version ([0f985e3](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/0f985e364ef3c7e296bcc3cb207e89ad4d65b1df))
+* VIC-664 Admin console | Manage Topics per Beratungsstelle ([94c63f8](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/94c63f878d75112db0106843d06adaf26f4ff412))
+* VIC-664 Admin console | Manage Topics per Beratungsstelle ([f4f85e1](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/f4f85e11ae24e24b6bcc98dcf27c5d2a07c69e18))
+* VIC-665 Registration | Basic registration with a main topic (and no PLZ) ([0fcdc63](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/0fcdc630bb26efae6f38c31dbce39aaedf6bfdfc))
+* VIC-665 Registration | Basic registration with a main topic (and no PLZ) ([ee329b2](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/ee329b24f41e818ef64c5ef7b26215fa1ae7108b))
+* VIC-745 Admin console | Add/edit demographics per agency ([a4b9b52](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/a4b9b524a26e8f9629f10166dfb15f55dff6bd0b))
+* VIC-745 Admin console | Add/edit demographics per agency ([a24a377](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/a24a377a198ab82db804a2fe3dabe3ec9236c050))
+* VIC-745 Admin console | Add/edit demographics per agency ([59cbaf7](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/59cbaf732560e2a903437171b0dbe702eac82be6))
+
+
+### Bug Fixes
+
+* adding missing method for searching agencies with topic id for the tenant aware case ([01b643c](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/01b643cbd57e057b38a2ed4de2a37b1bacdf91f1))
+* checkstyle ([1700f19](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/1700f197357c3f2716d0a2be0d4fc54234049787))
+* code review fixes ([ecbbbcd](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/ecbbbcdef75f616c347e47dafad13a6a7a9d3618))
+* data passed to logger ([1de9fca](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/1de9fca95d32a71d6bf649f5308809703b5ac377))
+* enrich topic name and other attributes in response also for the update and create agency usecase ([9a56c55](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/9a56c5554101d2f9fcec7ffd187a00d9fe8d4b7d))
+* fix checkstyle ([2a6866d](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/2a6866db5abde8a4d8207643d65f037f306fee9a))
+* fix dependency injection for feature toggled field ([a3481f5](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/a3481f5211af01d1fc2f06c163651d08e13458a0))
+* fixing NPE for the case of empty topics ([32c3b46](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/32c3b46cd7cd6ce071df75b6f73c3c271b23361b))
+* fixing NPE for the case of empty topics ([d2afd4d](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/d2afd4d38ed0c0bfee61db858ad253f593d5bcb8))
+* force safe log4j version ([f3f3312](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/f3f33128f70b2231bdfb66fbbffbc28a9b49c9e2))
+* increment version manually for release ([2a3f14b](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/2a3f14b8dc915848dfa4e83560c7f035020d0fd0))
+* NPE when topics are empty ([487c0c9](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/487c0c997c38ff5eeb87dd82d893fb3ea15af8d8))
+* provide origin header read and use host as fallback ([3ced566](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/3ced56644e2523ae74263e23255a53ce864b97e9))
+* removed caching for DTOs containig changeable feature toggle ([7474dd5](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/7474dd5899d17abf460f2d23991c826d404606a3))
+* update log4j ([c7b3914](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/c7b391467f3d93d82e66786bb295720ca2b9315a))
+* use junit 5 in AgencyAdminFullResponseDTOBuilderTest ([7dd312a](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/7dd312a2fbfa501fabb4c52ac688dcad767e8715))
+* VIC-664 Admin console | Manage Topics per Beratungsstelle ([50646e6](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/50646e6c988efab5e1699e5ddf8a3b4336581257))
+* VIC-664 Admin console | Manage Topics per Beratungsstelle ([79d1b1f](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/79d1b1f825cbe6874f155c14e4586f9fee6514bd))
+* VIC-665 Registration | Basic registration with a main topic (and no PLZ) ([4ae5092](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/4ae509226edc8e8b592c52a0c2f1d9d0273166b7))
+* VIC-745 Admin console | Add/edit demographics per agency ([e06c6aa](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/e06c6aa3df66d83d25746637f39170c0f57ea6ec))
+* VIC-745 Admin console | Remove assertions for object count in test to avoid conflicts in forks ([d55b709](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/d55b7093a7e722468943bd36c90b314e236f6a44))
+
 ## [1.11.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.10.0...v1.11.0) (2021-12-14)
 
 
