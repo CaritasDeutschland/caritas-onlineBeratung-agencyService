@@ -3,17 +3,16 @@ name: Push Admin API documentation
 on:
   push:
     paths:
-      - 'api/agencyadminservice.yaml'
+      - "api/agencyadminservice.yaml"
     branches-ignore:
-      - 'master'
-      - 'develop'
+      - "master"
+      - "develop"
 
 jobs:
   documentation:
     name: Pushes changes to Admin API
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -43,9 +42,10 @@ jobs:
           dst_path: docs/backend/admin/agencyservice
           dst_owner: ${{ github.repository_owner }}
           dst_repo_name: ${{ secrets.DOCUMENTATION_REPO }}
+          src_branch: develop
           dst_branch: adminapi
           clean: true
-          commit_message: 'docs: updated agency service admin api description'
+          commit_message: "docs: updated agency service admin api description"
 
       - name: Maven clean
         run: mvn -B -Pprod clean

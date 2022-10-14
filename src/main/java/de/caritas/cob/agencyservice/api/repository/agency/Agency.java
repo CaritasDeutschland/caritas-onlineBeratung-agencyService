@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -125,6 +126,8 @@ public class Agency implements TenantAware {
 
   @Column(name = "is_offline", nullable = false)
   @Type(type = "org.hibernate.type.NumericBooleanType")
+  @SortableField
+  @Field
   private boolean offline;
 
   @Size(max = 500)
@@ -135,6 +138,17 @@ public class Agency implements TenantAware {
   @Column(name = "is_external", nullable = false)
   @Type(type = "org.hibernate.type.NumericBooleanType")
   private boolean isExternal;
+
+  @PositiveOrZero
+  @Column(name = "age_from")
+  private Short ageFrom;
+
+  @PositiveOrZero
+  @Column(name = "age_to")
+  private Short ageTo;
+
+  @Column(name = "genders")
+  private String genders;
 
   @Column(name = "delete_date")
   private LocalDateTime deleteDate;
@@ -159,4 +173,9 @@ public class Agency implements TenantAware {
   @Column(name = "tenant_id")
   @Field
   private Long tenantId;
+
+  @Transient
+  public boolean hasAnyDemographicsAttributes() {
+    return getAgeTo() != null || getAgeFrom() != null || getGenders() != null;
+  }
 }
