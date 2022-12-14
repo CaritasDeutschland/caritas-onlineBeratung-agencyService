@@ -93,8 +93,7 @@ public class Agency implements TenantAware {
   @SortableField
   private String name;
 
-  @NonNull
-  @Column(name = "description", nullable = false)
+  @Column(name = "description")
   @Field
   @SortableField
   private String description;
@@ -120,7 +119,7 @@ public class Agency implements TenantAware {
   private boolean teamAgency;
 
   @PositiveOrZero
-  @Column(name = "consulting_type", updatable = false, nullable = false)
+  @Column(name = "consulting_type", nullable = false)
   @NonNull
   private Integer consultingTypeId;
 
