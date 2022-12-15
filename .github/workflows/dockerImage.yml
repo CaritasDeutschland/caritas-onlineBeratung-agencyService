@@ -5,6 +5,8 @@ on:
     branches:
       - "staging"
       - "develop"
+      - "staging"
+      - "release"
     tags:
       - "dockerImage.v.*"
       - "v*"
