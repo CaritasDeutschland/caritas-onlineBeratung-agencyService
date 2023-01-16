@@ -1,6 +1,6 @@
 {
   "name": "online-beratung-agencyservice",
-  "version": "1.14.3",
+  "version": "1.15.0",
   "scripts": {
     "release": "standard-version"
   },

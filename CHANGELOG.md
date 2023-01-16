@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.15.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.14.3...v1.15.0) (2023-01-16)
+
+
+### Features
+
+* updated docker workflow with proper tagging ([319caa7](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/319caa7d1d3432c3ca4fe100a2fa41c0a38c885f))
+
+
+### Bug Fixes
+
+* release asterisk ([011534e](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/011534ea40d3a93133a128d5c86f859ca11c377c))
+
 ### [1.14.3](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.14.1...v1.14.3) (2022-12-15)
 
 
