@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.16.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.15.0...v1.16.0) (2023-05-10)
+
+
+### Features
+
+* add delete agency workflow that deletes agencies marked for deletion ([13bad8d](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/13bad8d65bfc55a6f677e98fc7067d43b28b6327))
+* add healtcheck ([4dc18bb](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/4dc18bbfe1ff94ec1ca012d695ad823d266e9c62))
+* add healtcheck ([2e93af6](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/2e93af614c7c1dc330655805b1cd3e2509f96146))
+* add healtcheck ([7f994db](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/7f994db4889b1b81f0f268213f0215b8a49ea23f))
+
+
+### Bug Fixes
+
+* agency deletion logic ([cecf642](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/cecf6422a4c3f51c0f4c4fbb42b735c862c5f467))
+* bring transactionality to agency deletion ([f54fd7e](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/f54fd7e5723f8fcd2620b03a0802403c26fcae32))
+* postcode sorting ([104d5cc](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/104d5ccac05ed702153c24a2d4b917dbfe9af9d5))
+* postcode sorting ([f2a6105](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/f2a6105d9aa7b65b79ad073a8274ec5a2a8de1fc))
+* tomcat setting to avoid request rejection, see https://stackoverflow.com/questions/54080874/400-bad-request-returned-in-spring-boot-even-before-the-request-reaches-filter ([2c843fa](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/2c843faebdd227f0729d6942f99aabe7fcb666b0))
+
 ## [1.15.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.14.3...v1.15.0) (2023-01-16)
 
 
