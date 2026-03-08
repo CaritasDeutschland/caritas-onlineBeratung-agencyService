@@ -26,10 +26,11 @@ jobs:
           branch=${raw##*/}
           echo BRANCH_NAME=$(echo -n "${branch}") >> $GITHUB_ENV
       - name: Setup JVM
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v1
         with:
           java-version: 11.0.10
-          distribution: temurin
+          java-package: jdk
+          architecture: x64
 
       - name: Caching maven dependencies
         uses: actions/cache@v4
