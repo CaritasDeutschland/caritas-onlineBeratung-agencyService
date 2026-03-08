@@ -28,7 +28,7 @@ public class ConsultingTypeManager {
       return consultingTypeService.getExtendedConsultingTypeResponseDTO(consultingTypeId);
     } catch (RestClientException ex) {
       throw new MissingConsultingTypeException(
-          String.format("No settings for consulting type %s found.", consultingTypeId));
+          "No settings for consulting type %s found.".formatted(consultingTypeId));
     }
   }
 

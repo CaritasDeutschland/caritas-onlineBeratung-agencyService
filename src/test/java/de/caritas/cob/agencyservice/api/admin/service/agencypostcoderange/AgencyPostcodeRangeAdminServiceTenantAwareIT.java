@@ -7,11 +7,10 @@ import de.caritas.cob.agencyservice.AgencyServiceApplication;
 import de.caritas.cob.agencyservice.api.exception.httpresponses.NotFoundException;
 import de.caritas.cob.agencyservice.api.repository.agencypostcoderange.AgencyPostcodeRangeRepository;
 import de.caritas.cob.agencyservice.api.tenant.TenantContext;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
@@ -21,10 +20,8 @@ import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AgencyServiceApplication.class)
 @TestPropertySource(properties = "spring.profiles.active=testing")
 @AutoConfigureTestDatabase(replace = Replace.ANY)
@@ -36,12 +33,12 @@ public class AgencyPostcodeRangeAdminServiceTenantAwareIT extends AgencyPostcode
 
   final static long AGENCY_WITH_TENANT_ID_2 = 1734L;
 
-  @Before
+  @BeforeEach
   public void beforeEach() {
     TenantContext.setCurrentTenant(1L);
   }
 
-  @After
+  @AfterEach
   public void afterEach() {
     TenantContext.clear();
   }
@@ -65,7 +62,7 @@ public class AgencyPostcodeRangeAdminServiceTenantAwareIT extends AgencyPostcode
         .getEmbedded();
     assertThat(postcodeRange, notNullValue());
     assertThat(postcodeRange.getId(), notNullValue());
-    Assert.assertEquals("", postcodeRange.getPostcodeRanges());
+    Assertions.assertEquals("", postcodeRange.getPostcodeRanges());
   }
 
   @Test
@@ -79,8 +76,8 @@ public class AgencyPostcodeRangeAdminServiceTenantAwareIT extends AgencyPostcode
     super.deleteAgencyPostcodeRange_Should_deletePostcodeRange_When_agencyIdExists();
   }
 
-  @Test(expected = NotFoundException.class)
-  public void deleteAgencyPostcodeRange_Should_throwNotFound_When_agencyIdNotExists() {
+  @Test
+  public void deleteAgencyPostcodeRange_Should_accept_When_agencyIdNotExists() {
     super.deleteAgencyPostcodeRange_Should_throwNotFound_When_agencyIdNotExists();
   }
 

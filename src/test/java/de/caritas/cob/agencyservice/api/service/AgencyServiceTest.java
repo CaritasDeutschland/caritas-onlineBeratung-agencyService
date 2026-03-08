@@ -21,9 +21,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
@@ -49,23 +50,26 @@ import de.caritas.cob.agencyservice.tenantservice.generated.web.model.Settings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
+import javax.swing.text.html.Option;
 import org.hamcrest.collection.IsEmptyCollection;
 import org.jeasy.random.EasyRandom;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AgencyServiceTest {
 
   private static final Integer AGE = null;
   private static final String GENDER = null;
+
+  private static final String COUNSELLING_RELATION = null;
 
   @InjectMocks
   private AgencyService agencyService;
@@ -82,9 +86,15 @@ public class AgencyServiceTest {
   @Mock
   private AgencyRepository agencyRepository;
 
+  @Mock
+  CentralDataProtectionTemplateService centralDataProtectionTemplateService;
+
+  @Mock
+  ApplicationSettingsService applicationSettingsService;
+
   private static final Long TENANT_ID = null;
 
-  @After
+  @AfterEach
   public void tearDown() {
     TenantContext.clear();
     ReflectionTestUtils.setField(agencyService, "topicsFeatureEnabled", false);
@@ -101,7 +111,7 @@ public class AgencyServiceTest {
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_WITH_WHITESPOT_AGENCY);
     when(agencyRepository.searchWithoutTopic(VALID_POSTCODE, VALID_POSTCODE_LENGTH,
-        CONSULTING_TYPE_SUCHT, AGE, GENDER, TENANT_ID)).thenThrow(dbEx);
+        CONSULTING_TYPE_SUCHT, AGE, GENDER, COUNSELLING_RELATION, TENANT_ID)).thenThrow(dbEx);
 
     callGetAgencies();
   }
@@ -109,10 +119,10 @@ public class AgencyServiceTest {
   private void callGetAgencies() {
     Optional<Integer> emptyTopicIds = Optional.empty();
     try {
-      agencyService.getAgencies(VALID_POSTCODE, CONSULTING_TYPE_SUCHT, emptyTopicIds);
+      agencyService.getAgencies(Optional.of(VALID_POSTCODE), CONSULTING_TYPE_SUCHT, emptyTopicIds);
       fail("Expected exception: ServiceException");
     } catch (InternalServerErrorException internalServerErrorException) {
-      assertTrue("Excepted ServiceException thrown", true);
+      assertTrue(true, "Excepted ServiceException thrown");
     }
   }
 
@@ -123,7 +133,7 @@ public class AgencyServiceTest {
     NumberFormatException nfEx = new NumberFormatException();
 
     when(agencyRepository.searchWithoutTopic(VALID_POSTCODE, VALID_POSTCODE_LENGTH,
-        CONSULTING_TYPE_SUCHT, AGE, GENDER, TENANT_ID)).thenReturn(EMPTY_AGENCY_LIST);
+        CONSULTING_TYPE_SUCHT, AGE, GENDER, COUNSELLING_RELATION, TENANT_ID)).thenReturn(EMPTY_AGENCY_LIST);
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_WITH_WHITESPOT_AGENCY);
     when(agencyRepository.findByIdAndDeleteDateNull(Mockito.anyLong())).thenThrow(nfEx);
@@ -136,7 +146,7 @@ public class AgencyServiceTest {
       throws MissingConsultingTypeException {
 
     when(agencyRepository.searchWithoutTopic(VALID_POSTCODE, VALID_POSTCODE_LENGTH,
-        CONSULTING_TYPE_SUCHT, AGE, GENDER, TENANT_ID)).thenReturn(EMPTY_AGENCY_LIST);
+        CONSULTING_TYPE_SUCHT, AGE, GENDER, COUNSELLING_RELATION, TENANT_ID)).thenReturn(EMPTY_AGENCY_LIST);
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_WITH_WHITESPOT_AGENCY);
 
@@ -151,13 +161,13 @@ public class AgencyServiceTest {
       throws MissingConsultingTypeException {
 
     when(agencyRepository.searchWithoutTopic(VALID_POSTCODE, VALID_POSTCODE_LENGTH,
-        CONSULTING_TYPE_SUCHT, AGE, GENDER, TENANT_ID)).thenReturn(AGENCY_LIST);
+        CONSULTING_TYPE_SUCHT, AGE, GENDER, COUNSELLING_RELATION, TENANT_ID)).thenReturn(AGENCY_LIST);
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_WITH_WHITESPOT_AGENCY);
 
-    assertThat(agencyService.getAgencies(VALID_POSTCODE, CONSULTING_TYPE_SUCHT, Optional.empty()),
+    assertThat(agencyService.getAgencies(Optional.of(VALID_POSTCODE), CONSULTING_TYPE_SUCHT, Optional.empty()),
         everyItem(instanceOf(FullAgencyResponseDTO.class)));
-    assertThat(agencyService.getAgencies(VALID_POSTCODE, CONSULTING_TYPE_SUCHT, Optional.empty()))
+    assertThat(agencyService.getAgencies(Optional.of(VALID_POSTCODE), CONSULTING_TYPE_SUCHT, Optional.empty()))
         .extracting(POSTCODE).contains(POSTCODE);
   }
 
@@ -168,12 +178,12 @@ public class AgencyServiceTest {
     Optional<Agency> agency = Optional.of(AGENCY_SUCHT);
 
     when(agencyRepository.searchWithoutTopic(VALID_POSTCODE, VALID_POSTCODE_LENGTH,
-        CONSULTING_TYPE_SUCHT, AGE, GENDER, TENANT_ID)).thenReturn(EMPTY_AGENCY_LIST);
+        CONSULTING_TYPE_SUCHT, AGE, GENDER, COUNSELLING_RELATION, TENANT_ID)).thenReturn(EMPTY_AGENCY_LIST);
     when(agencyRepository.findByIdAndDeleteDateNull(Mockito.anyLong())).thenReturn(agency);
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_WITH_WHITESPOT_AGENCY);
 
-    assertThat(agencyService.getAgencies(VALID_POSTCODE, CONSULTING_TYPE_SUCHT, Optional.empty()))
+    assertThat(agencyService.getAgencies(Optional.of(VALID_POSTCODE), CONSULTING_TYPE_SUCHT, Optional.empty()))
         .extracting(FIELD_AGENCY_ID).contains(AGENCY_ID);
   }
 
@@ -182,11 +192,11 @@ public class AgencyServiceTest {
       throws MissingConsultingTypeException {
 
     when(agencyRepository.searchWithoutTopic(VALID_POSTCODE, VALID_POSTCODE_LENGTH,
-        CONSULTING_TYPE_SUCHT, AGE, GENDER, TENANT_ID)).thenReturn(new ArrayList<>());
+        CONSULTING_TYPE_SUCHT, AGE, GENDER, COUNSELLING_RELATION, TENANT_ID)).thenReturn(new ArrayList<>());
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_WITHOUT_WHITESPOT_AGENCY);
 
-    assertThat(agencyService.getAgencies(VALID_POSTCODE, CONSULTING_TYPE_SUCHT, Optional.empty()),
+    assertThat(agencyService.getAgencies(Optional.of(VALID_POSTCODE), CONSULTING_TYPE_SUCHT, Optional.empty()),
         IsEmptyCollection.empty());
   }
 
@@ -197,7 +207,7 @@ public class AgencyServiceTest {
     when(consultingTypeManager.getConsultingTypeSettings(Mockito.anyInt()))
         .thenReturn(CONSULTING_TYPE_SETTINGS_EMIGRATION);
 
-    assertThat(agencyService.getAgencies(VALID_POSTCODE, CONSULTING_TYPE_EMIGRATION, Optional.empty()),
+    assertThat(agencyService.getAgencies(Optional.of(VALID_POSTCODE), CONSULTING_TYPE_EMIGRATION, Optional.empty()),
         IsEmptyCollection.empty());
   }
 
@@ -254,13 +264,14 @@ public class AgencyServiceTest {
         IsEmptyCollection.empty());
   }
 
-  @Test(expected = InternalServerErrorException.class)
-  public void getAgencies_Should_ThrowInternalServerError_When_MissingConsultingTypeExceptionIsThrown()
-      throws MissingConsultingTypeException {
+  @Test
+  public void getAgencies_Should_ThrowInternalServerError_When_MissingConsultingTypeExceptionIsThrown() {
+    assertThrows(InternalServerErrorException.class, () -> {
 
-    when(consultingTypeManager.getConsultingTypeSettings(anyInt()))
-        .thenThrow(new MissingConsultingTypeException(""));
-    agencyService.getAgencies("", 0, Optional.empty());
+      when(consultingTypeManager.getConsultingTypeSettings(anyInt()))
+          .thenThrow(new MissingConsultingTypeException(""));
+      agencyService.getAgencies(Optional.of(""), 0, Optional.empty());
+    });
   }
 
   @Test
@@ -273,36 +284,41 @@ public class AgencyServiceTest {
     verify(agencyRepository, times(1)).save(any());
   }
 
-  @Test(expected = NotFoundException.class)
+  @Test
   public void setAgencyOffline_Should_ThrowNotFoundException_WhenAgencyIsNotFound() {
+    assertThrows(NotFoundException.class, () -> {
 
-    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.empty());
-    agencyService.setAgencyOffline(AGENCY_ID);
+      when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.empty());
+      agencyService.setAgencyOffline(AGENCY_ID);
+
+    });
 
   }
 
-  @Test(expected = BadRequestException.class)
-  public void getAgenciesByConsultingType_Should_throwBadRequestException_When_ConsultingTypeIsInvalid()
-      throws MissingConsultingTypeException {
-    when(consultingTypeManager.getConsultingTypeSettings(-10))
-        .thenThrow(new MissingConsultingTypeException(""));
-    this.agencyService.getAgencies(-10);
+  @Test
+  public void getAgenciesByConsultingType_Should_throwBadRequestException_When_ConsultingTypeIsInvalid() {
+    assertThrows(BadRequestException.class, () -> {
+      when(consultingTypeManager.getConsultingTypeSettings(-10))
+          .thenThrow(new MissingConsultingTypeException(""));
+      this.agencyService.getAgencies(-10);
+    });
   }
 
-  @Test(expected = BadRequestException.class)
-  public void getAgencies_Should_throwBadRequestException_When_TopicIdNotProvidedAndFeatureEnabled()
-      throws MissingConsultingTypeException {
-    // given
-    ReflectionTestUtils.setField(agencyService, "topicsFeatureEnabled", true);
-    ExtendedConsultingTypeResponseDTO dto = new ExtendedConsultingTypeResponseDTO().registration(
-        new BasicConsultingTypeResponseDTORegistration().minPostcodeSize(5));
-    when(consultingTypeManager.getConsultingTypeSettings(1)).thenReturn(dto);
-    RestrictedTenantDTO restrictedTenantDTO = new RestrictedTenantDTO().settings(
-        new Settings().topicsInRegistrationEnabled(true));
-    when(tenantService.getRestrictedTenantDataForSingleTenant()).thenReturn(restrictedTenantDTO);
+  @Test
+  public void getAgencies_Should_throwBadRequestException_When_TopicIdNotProvidedAndFeatureEnabled() {
+    assertThrows(BadRequestException.class, () -> {
+      // given
+      ReflectionTestUtils.setField(agencyService, "topicsFeatureEnabled", true);
+      ExtendedConsultingTypeResponseDTO dto = new ExtendedConsultingTypeResponseDTO().registration(
+          new BasicConsultingTypeResponseDTORegistration().minPostcodeSize(5));
+      when(consultingTypeManager.getConsultingTypeSettings(1)).thenReturn(dto);
+      RestrictedTenantDTO restrictedTenantDTO = new RestrictedTenantDTO().settings(
+          new Settings().topicsInRegistrationEnabled(true));
+      when(tenantService.getRestrictedTenantDataForSingleTenant()).thenReturn(restrictedTenantDTO);
 
-    // when
-    this.agencyService.getAgencies("12123", 1, Optional.empty());
+      // when
+      this.agencyService.getAgencies(Optional.of("12123"), 1, Optional.empty());
+    });
   }
 
   @Test
@@ -318,10 +334,10 @@ public class AgencyServiceTest {
     when(tenantService.getRestrictedTenantDataForSingleTenant()).thenReturn(restrictedTenantDTO);
 
     // when
-    this.agencyService.getAgencies("12123", 1, Optional.of(2));
+    this.agencyService.getAgencies(Optional.of("12123"), 1, Optional.of(2));
 
     // then
-    verify(agencyRepository).searchWithTopic("12123", 5, 1, 2, AGE, GENDER,
+    verify(agencyRepository).searchWithTopic("12123", 5, 1, 2, AGE, GENDER, COUNSELLING_RELATION,
         TENANT_ID);
   }
 }

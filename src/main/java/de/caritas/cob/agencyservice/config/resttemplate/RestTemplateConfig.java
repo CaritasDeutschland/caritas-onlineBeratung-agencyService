@@ -18,7 +18,7 @@ public class RestTemplateConfig {
    * @return {@link RestTemplate}
    */
   @Bean
-  public RestTemplate restTemplate(RestTemplateBuilder builder) {
+  RestTemplate restTemplate(RestTemplateBuilder builder) {
     return builder
         .errorHandler(new CustomResponseErrorHandler())
         .build();

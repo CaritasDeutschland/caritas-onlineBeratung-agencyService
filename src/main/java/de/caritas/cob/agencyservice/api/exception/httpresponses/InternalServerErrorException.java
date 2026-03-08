@@ -1,6 +1,7 @@
 package de.caritas.cob.agencyservice.api.exception.httpresponses;
 
 import de.caritas.cob.agencyservice.api.service.LogService;
+import java.io.Serial;
 import java.util.function.Consumer;
 
 /**
@@ -8,6 +9,7 @@ import java.util.function.Consumer;
  */
 public class InternalServerErrorException extends CustomHttpStatusException {
 
+  @Serial
   private static final long serialVersionUID = 6051508644381775936L;
 
   /**

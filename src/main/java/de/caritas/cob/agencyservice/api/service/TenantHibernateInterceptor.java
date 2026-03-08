@@ -8,17 +8,18 @@ import java.util.Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 
 @RequiredArgsConstructor
 @Slf4j
-public class TenantHibernateInterceptor extends EmptyInterceptor {
+public class TenantHibernateInterceptor implements Interceptor {
 
   private final Long TECHNICAL_TENANT_ID = 0L;
 
   private static Boolean multiTenancyEnabled;
 
   @Override
-  public void preFlush(Iterator entities) {
+  public void preFlush(Iterator<Object> entities) {
 
     if (multiTenancyEnabled == null) {
       multiTenancyEnabled = resolveMultiTenancy();
@@ -28,17 +29,16 @@ public class TenantHibernateInterceptor extends EmptyInterceptor {
       Object entity;
       while (entities.hasNext()) {
         entity = entities.next();
-        if (entity instanceof TenantAware) {
-          var tenantAware = (TenantAware) entity;
+        if (entity instanceof TenantAware tenantAware) {
           if (tenantAware.getTenantId() == null && !Long.valueOf(TECHNICAL_TENANT_ID)
               .equals(TenantContext.getCurrentTenant())) {
-            ((TenantAware) entity).setTenantId(TenantContext.getCurrentTenant());
+            tenantAware.setTenantId(TenantContext.getCurrentTenant());
           }
         }
       }
     }
 
-    super.preFlush(entities);
+    Interceptor.super.preFlush(entities);
   }
 
   private boolean resolveMultiTenancy() {

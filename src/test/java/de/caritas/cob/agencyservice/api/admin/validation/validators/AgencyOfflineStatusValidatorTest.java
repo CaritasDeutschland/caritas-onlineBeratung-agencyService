@@ -28,8 +28,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Stream;
 import org.jeasy.random.EasyRandom;
-import org.junit.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -94,7 +94,7 @@ class AgencyOfflineStatusValidatorTest {
     EasyRandom easyRandom = new EasyRandom();
     this.validateAgencyDto = easyRandom.nextObject(ValidateAgencyDTO.class);
     this.consultingTypeSettings = easyRandom.nextObject(ExtendedConsultingTypeResponseDTO.class);
-    this.consultingTypeSettings.setWhiteSpot(easyRandom.nextObject(de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.WhiteSpotDTO.class));
+    this.consultingTypeSettings.setWhiteSpot(easyRandom.nextObject(de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.ExtendedConsultingTypeResponseDTOAllOfWhiteSpot.class));
   }
 
   @ParameterizedTest

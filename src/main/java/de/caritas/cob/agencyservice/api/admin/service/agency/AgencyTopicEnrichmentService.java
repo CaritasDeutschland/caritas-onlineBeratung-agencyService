@@ -5,6 +5,7 @@ import de.caritas.cob.agencyservice.api.model.TopicDTO;
 import de.caritas.cob.agencyservice.api.repository.agency.Agency;
 import de.caritas.cob.agencyservice.api.repository.agencytopic.AgencyTopic;
 import de.caritas.cob.agencyservice.api.service.TopicService;
+import de.caritas.cob.agencyservice.api.tenant.TenantContext;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

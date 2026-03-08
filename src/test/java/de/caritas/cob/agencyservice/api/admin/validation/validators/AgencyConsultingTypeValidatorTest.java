@@ -1,6 +1,7 @@
 package de.caritas.cob.agencyservice.api.admin.validation.validators;
 
 import static de.caritas.cob.agencyservice.testHelper.TestConstants.CONSULTING_TYPE_AIDS;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -13,8 +14,8 @@ import de.caritas.cob.agencyservice.api.exception.MissingConsultingTypeException
 import de.caritas.cob.agencyservice.api.exception.httpresponses.InvalidConsultingTypeException;
 import de.caritas.cob.agencyservice.api.manager.consultingtype.ConsultingTypeManager;
 import org.jeasy.random.EasyRandom;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 public class AgencyConsultingTypeValidatorTest {
@@ -26,7 +27,7 @@ public class AgencyConsultingTypeValidatorTest {
 
   private ExtendedConsultingTypeResponseDTO consultingTypeSettings;
 
-  @Before
+  @BeforeEach
   public void setup() {
     initMocks(this);
     EasyRandom easyRandom = new EasyRandom();
@@ -34,14 +35,15 @@ public class AgencyConsultingTypeValidatorTest {
     this.consultingTypeSettings = easyRandom.nextObject(ExtendedConsultingTypeResponseDTO.class);
   }
 
-  @Test(expected = InvalidConsultingTypeException.class)
-  public void validate_Should_ThrowInvalidConsultingTypeException_WhenConsultingTypeIsInvalid()
-      throws MissingConsultingTypeException {
-    this.validateAgencyDto.setConsultingType(-1);
+  @Test
+  public void validate_Should_ThrowInvalidConsultingTypeException_WhenConsultingTypeIsInvalid() {
+    assertThrows(InvalidConsultingTypeException.class, () -> {
+      this.validateAgencyDto.setConsultingType(-1);
 
-    when(consultingTypeManager.getConsultingTypeSettings(anyInt())).thenThrow(new MissingConsultingTypeException(""));
+      when(consultingTypeManager.getConsultingTypeSettings(anyInt())).thenThrow(new MissingConsultingTypeException(""));
 
-    new AgencyConsultingTypeValidator(consultingTypeManager).validate(validateAgencyDto);
+      new AgencyConsultingTypeValidator(consultingTypeManager).validate(validateAgencyDto);
+    });
   }
 
   @Test

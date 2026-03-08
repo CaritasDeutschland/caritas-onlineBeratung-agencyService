@@ -63,7 +63,7 @@ public class TenantServiceApiClient extends ApiClient {
 
     } catch (IntrospectionException exception) {
       throw new InternalServerErrorException(
-          String.format("Could not obtain method properties of %s", queryValue.toString()),
+          "Could not obtain method properties of %s".formatted(queryValue.toString()),
           exception);
     }
   }
@@ -77,7 +77,7 @@ public class TenantServiceApiClient extends ApiClient {
       }
     } catch (Exception exception) {
       throw new InternalServerErrorException(
-          String.format("Could not obtain method key value pairs of %s", queryValue.toString()),
+          "Could not obtain method key value pairs of %s".formatted(queryValue.toString()),
           exception);
     }
   }

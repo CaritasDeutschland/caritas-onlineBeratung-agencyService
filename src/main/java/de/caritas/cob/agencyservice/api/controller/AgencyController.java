@@ -6,8 +6,9 @@ import de.caritas.cob.agencyservice.api.model.AgencyResponseDTO;
 import de.caritas.cob.agencyservice.api.model.FullAgencyResponseDTO;
 import de.caritas.cob.agencyservice.api.service.AgencyService;
 import de.caritas.cob.agencyservice.generated.api.controller.AgenciesApi;
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Controller for agency API requests
  */
 @RestController
-@Api(tags = "agency-controller")
+@Tag(name = "agency-controller")
 @RequiredArgsConstructor
 public class AgencyController implements AgenciesApi {
 
@@ -38,14 +39,15 @@ public class AgencyController implements AgenciesApi {
    */
   @Override
   public ResponseEntity<List<FullAgencyResponseDTO>> getAgencies(
-      @RequestParam String postcode, @RequestParam Integer consultingType,
-      @RequestParam(value = "topicId", required = false) Integer topicId,
-      @RequestParam(value = "age", required = false) Integer age,
-      @RequestParam(value = "gender", required = false) String gender
+      @RequestParam Integer consultingType, @RequestParam(required = false) String postcode,
+      @RequestParam(required = false) Integer topicId,
+      @RequestParam(required = false) Integer age,
+      @RequestParam(required = false) String gender,
+      @RequestParam(required = false) String counsellingRelation
   ) {
 
-    var agencies = agencyService.getAgencies(postcode, consultingType,
-        ofNullable(topicId), ofNullable(age), ofNullable(gender));
+    var agencies = agencyService.getAgencies(Optional.ofNullable(postcode), consultingType,
+        ofNullable(topicId), ofNullable(age), ofNullable(gender), ofNullable(counsellingRelation));
 
     return !CollectionUtils.isEmpty(agencies)
         ? new ResponseEntity<>(agencies, HttpStatus.OK)
@@ -60,7 +62,7 @@ public class AgencyController implements AgenciesApi {
    */
   @Override
   public ResponseEntity<List<AgencyResponseDTO>> getAgenciesByIds(
-      @PathVariable("agencyIds") List<Long> agencyIds) {
+      @PathVariable List<Long> agencyIds) {
 
     var agencies = agencyService.getAgencies(agencyIds);
 

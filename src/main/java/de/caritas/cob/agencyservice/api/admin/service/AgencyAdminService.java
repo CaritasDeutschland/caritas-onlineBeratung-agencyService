@@ -5,8 +5,10 @@ import static de.caritas.cob.agencyservice.api.exception.httpresponses.HttpStatu
 import static de.caritas.cob.agencyservice.api.model.AgencyTypeRequestDTO.AgencyTypeEnum.TEAM_AGENCY;
 import static java.util.Objects.nonNull;
 
+import com.google.common.base.Joiner;
 import de.caritas.cob.agencyservice.api.admin.service.agency.AgencyAdminFullResponseDTOBuilder;
 import de.caritas.cob.agencyservice.api.admin.service.agency.AgencyTopicEnrichmentService;
+import de.caritas.cob.agencyservice.api.admin.service.agency.DataProtectionConverter;
 import de.caritas.cob.agencyservice.api.admin.service.agency.DemographicsConverter;
 import de.caritas.cob.agencyservice.api.admin.validation.DeleteAgencyValidator;
 import de.caritas.cob.agencyservice.api.exception.httpresponses.ConflictException;
@@ -17,10 +19,13 @@ import de.caritas.cob.agencyservice.api.model.AgencyTypeRequestDTO;
 import de.caritas.cob.agencyservice.api.model.UpdateAgencyDTO;
 import de.caritas.cob.agencyservice.api.repository.agency.Agency;
 import de.caritas.cob.agencyservice.api.repository.agency.AgencyRepository;
+import de.caritas.cob.agencyservice.api.repository.agency.AgencyTenantUnawareRepository;
 import de.caritas.cob.agencyservice.api.repository.agencytopic.AgencyTopic;
 import de.caritas.cob.agencyservice.api.service.AppointmentService;
+import de.caritas.cob.agencyservice.api.tenant.TenantContext;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -36,16 +41,21 @@ import org.springframework.stereotype.Service;
 public class AgencyAdminService {
 
   private final @NonNull AgencyRepository agencyRepository;
+
+  private final @NonNull AgencyTenantUnawareRepository agencyTenantUnawareRepository;
+
   private final @NonNull UserAdminService userAdminService;
   private final @NonNull DeleteAgencyValidator deleteAgencyValidator;
   private final @NonNull AgencyTopicMergeService agencyTopicMergeService;
   private final @NonNull AppointmentService appointmentService;
 
+  private final @NonNull DataProtectionConverter dataProtectionConverter;
   @Autowired(required = false)
   private AgencyTopicEnrichmentService agencyTopicEnrichmentService;
 
   @Autowired(required = false)
   private DemographicsConverter demographicsConverter;
+
 
   @Value("${feature.topics.enabled}")
   private boolean featureTopicsEnabled;
@@ -89,11 +99,25 @@ public class AgencyAdminService {
    * @return an {@link AgencyAdminFullResponseDTO} instance
    */
   public AgencyAdminFullResponseDTO createAgency(AgencyDTO agencyDTO) {
-    var savedAgency = agencyRepository.save(fromAgencyDTO(agencyDTO));
+    setDefaultCounsellingRelationsIfEmpty(agencyDTO);
+    Agency agency = fromAgencyDTO(agencyDTO);
+    agency.setTenantId(TenantContext.getCurrentTenant());
+    var savedAgency = agencyRepository.save(agency);
     enrichWithAgencyTopicsIfTopicFeatureEnabled(savedAgency);
     this.appointmentService.syncAgencyDataToAppointmentService(savedAgency);
     return new AgencyAdminFullResponseDTOBuilder(savedAgency)
         .fromAgency();
+  }
+
+  private void setDefaultCounsellingRelationsIfEmpty(AgencyDTO agencyDTO) {
+    if (agencyDTO.getCounsellingRelations() == null || agencyDTO.getCounsellingRelations().isEmpty()) {
+      agencyDTO.setCounsellingRelations(getAllPossibleCounsellingRelations());
+    }
+  }
+
+  private List<AgencyDTO.CounsellingRelationsEnum> getAllPossibleCounsellingRelations() {
+    return Arrays.stream(AgencyDTO.CounsellingRelationsEnum.values()).toList();
+
   }
 
   /**
@@ -106,7 +130,6 @@ public class AgencyAdminService {
   private Agency fromAgencyDTO(AgencyDTO agencyDTO) {
 
     var agencyBuilder = Agency.builder()
-        .dioceseId(agencyDTO.getDioceseId())
         .name(agencyDTO.getName())
         .description(agencyDTO.getDescription())
         .postCode(agencyDTO.getPostcode())
@@ -116,13 +139,16 @@ public class AgencyAdminService {
         .consultingTypeId(agencyDTO.getConsultingType())
         .url(agencyDTO.getUrl())
         .isExternal(agencyDTO.getExternal())
+        .counsellingRelations(Joiner.on(",").join(agencyDTO.getCounsellingRelations()))
+        .agencyLogo(agencyDTO.getAgencyLogo())
         .createDate(LocalDateTime.now(ZoneOffset.UTC))
         .updateDate(LocalDateTime.now(ZoneOffset.UTC));
+
 
     if (featureDemographicsEnabled && agencyDTO.getDemographics() != null) {
       demographicsConverter.convertToEntity(agencyDTO.getDemographics(), agencyBuilder);
     }
-
+    dataProtectionConverter.convertToEntity(agencyDTO.getDataProtection(), agencyBuilder);
     var agencyToCreate = agencyBuilder.build();
 
     if (featureTopicsEnabled) {
@@ -130,9 +156,26 @@ public class AgencyAdminService {
           agencyDTO.getTopicIds());
       agencyToCreate.setAgencyTopics(agencyTopics);
     }
+
+    convertCounsellingRelations(agencyDTO, agencyToCreate);
     return agencyToCreate;
   }
 
+  private void convertCounsellingRelations(AgencyDTO agencyDTO, Agency agencyToCreate) {
+    if (agencyDTO.getCounsellingRelations() != null && !agencyDTO.getCounsellingRelations().isEmpty()) {
+      agencyToCreate.setCounsellingRelations(joinToCommaSeparatedValues(agencyDTO.getCounsellingRelations()));
+    }
+  }
+
+  private void convertCounsellingRelations(UpdateAgencyDTO agencyDTO, Agency agencyToUpdate) {
+    if (agencyDTO.getCounsellingRelations() != null && !agencyDTO.getCounsellingRelations().isEmpty()) {
+      agencyToUpdate.setCounsellingRelations(joinToCommaSeparatedValues(agencyDTO.getCounsellingRelations()));
+    }
+  }
+
+  private <T> String  joinToCommaSeparatedValues(List<T> counsellingRelationsEnums) {
+    return Joiner.on(",").skipNulls().join(counsellingRelationsEnums);
+  }
 
   /**
    * Updates an agency in the database.
@@ -146,6 +189,7 @@ public class AgencyAdminService {
     var updatedAgency = agencyRepository.save(mergeAgencies(agency, updateAgencyDTO));
     enrichWithAgencyTopicsIfTopicFeatureEnabled(updatedAgency);
     this.appointmentService.syncAgencyDataToAppointmentService(updatedAgency);
+    agencyRepository.flush();
     return new AgencyAdminFullResponseDTOBuilder(updatedAgency)
         .fromAgency();
   }
@@ -154,7 +198,6 @@ public class AgencyAdminService {
 
     var agencyBuilder = Agency.builder()
         .id(agency.getId())
-        .dioceseId(updateAgencyDTO.getDioceseId())
         .name(updateAgencyDTO.getName())
         .description(updateAgencyDTO.getDescription())
         .postCode(updateAgencyDTO.getPostcode())
@@ -165,7 +208,11 @@ public class AgencyAdminService {
         .isExternal(updateAgencyDTO.getExternal())
         .createDate(agency.getCreateDate())
         .updateDate(LocalDateTime.now(ZoneOffset.UTC))
-        .deleteDate(agency.getDeleteDate());
+        .counsellingRelations(agency.getCounsellingRelations())
+        .deleteDate(agency.getDeleteDate())
+        .agencyLogo(updateAgencyDTO.getAgencyLogo());
+
+    dataProtectionConverter.convertToEntity(updateAgencyDTO.getDataProtection(), agencyBuilder);
 
     if (nonNull(updateAgencyDTO.getConsultingType())) {
       agencyBuilder.consultingTypeId(updateAgencyDTO.getConsultingType());
@@ -178,6 +225,7 @@ public class AgencyAdminService {
     }
 
     var agencyToUpdate = agencyBuilder.build();
+    convertCounsellingRelations(updateAgencyDTO, agencyToUpdate);
 
     if (featureTopicsEnabled) {
       List<AgencyTopic> agencyTopics = agencyTopicMergeService.getMergedTopics(agencyToUpdate,
@@ -188,8 +236,12 @@ public class AgencyAdminService {
       // and we have to consider this and pass it for merging.
       agencyToUpdate.setAgencyTopics(agency.getAgencyTopics());
     }
+
+    agencyToUpdate.setTenantId(agency.getTenantId());
     return agencyToUpdate;
   }
+
+
 
 
   /**
@@ -222,5 +274,9 @@ public class AgencyAdminService {
     agency.setDeleteDate(LocalDateTime.now(ZoneOffset.UTC));
     this.agencyRepository.save(agency);
     this.appointmentService.deleteAgency(agency);
+  }
+
+  public List<Agency> getAgenciesByTenantId(Long tenantId) {
+    return this.agencyTenantUnawareRepository.findByTenantId(tenantId);
   }
 }

@@ -1,8 +1,7 @@
 package de.caritas.cob.agencyservice.api.admin.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -17,10 +16,9 @@ import de.caritas.cob.agencyservice.api.tenant.TenantContext;
 import de.caritas.cob.agencyservice.topicservice.generated.web.model.TopicDTO;
 import java.lang.reflect.Field;
 import java.util.Optional;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,10 +28,8 @@ import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AgencyServiceApplication.class)
 @TestPropertySource(properties = "spring.profiles.active=testing")
 @AutoConfigureTestDatabase(replace = Replace.ANY)
@@ -51,7 +47,7 @@ public class AgencyAdminServiceTenantAwareIT extends AgencyAdminServiceITBase {
   @MockBean
   private TopicService topicService;
 
-  @Before
+  @BeforeEach
   public void beforeEach() throws NoSuchFieldException, IllegalAccessException {
     givenTopicServiceReturnsListOfTopics();
     TenantContext.setCurrentTenant(1L);
@@ -68,7 +64,7 @@ public class AgencyAdminServiceTenantAwareIT extends AgencyAdminServiceITBase {
           new TopicDTO().id(2L).name(THIRD_TOPIC)));
   }
 
-  @After
+  @AfterEach
   public void afterEach() {
     TenantContext.clear();
   }
@@ -119,7 +115,6 @@ public class AgencyAdminServiceTenantAwareIT extends AgencyAdminServiceITBase {
     assertThat(result.getEmbedded().getDescription()).isNotNull();
     assertThat(result.getEmbedded().getConsultingType()).isNotNull();
     assertThat(result.getEmbedded().getName()).isNotNull();
-    assertThat(result.getEmbedded().getDioceseId()).isNotNull();
     assertThat(result.getEmbedded().getTopics()).hasSize(2);
     assertThat(result.getEmbedded().getTopics())
         .extracting(topic -> topic.getId())
@@ -143,7 +138,6 @@ public class AgencyAdminServiceTenantAwareIT extends AgencyAdminServiceITBase {
     var agencyOptional =
         agencyRepository.findById(agencyAdminFullResponseDTO.getEmbedded().getId());
     var agency = agencyOptional.orElseThrow(RuntimeException::new);
-    assertThat(updateAgencyDTO.getDioceseId()).isEqualTo(agency.getDioceseId());
     assertThat(updateAgencyDTO.getPostcode()).isEqualTo(agency.getPostCode());
     assertThat(updateAgencyDTO.getDescription()).isEqualTo(agency.getDescription());
     assertThat(updateAgencyDTO.getName()).isEqualTo(agency.getName());
@@ -175,7 +169,6 @@ public class AgencyAdminServiceTenantAwareIT extends AgencyAdminServiceITBase {
     Agency agency = agencyOptional.get();
     assertTrue(agency.isTeamAgency());
     assertThat(agency.getConsultingTypeId()).isZero();
-    assertThat(agency.getDioceseId().longValue()).isZero();
     assertThat(agency.getPostCode()).isEqualTo("12345");
     assertThat(agency.getDescription()).isEqualTo("Agency description");
     assertThat(agency.getName()).isEqualTo("Agency name");

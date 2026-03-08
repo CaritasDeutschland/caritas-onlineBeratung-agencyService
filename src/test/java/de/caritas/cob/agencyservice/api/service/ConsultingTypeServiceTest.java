@@ -1,6 +1,6 @@
 package de.caritas.cob.agencyservice.api.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import de.caritas.cob.agencyservice.api.service.securityheader.SecurityHeaderSupplier;

@@ -1,19 +1,18 @@
 package de.caritas.cob.agencyservice.api.admin.service.agencypostcoderange;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import de.caritas.cob.agencyservice.AgencyServiceApplication;
 import de.caritas.cob.agencyservice.api.exception.httpresponses.NotFoundException;
 import de.caritas.cob.agencyservice.api.repository.agencypostcoderange.AgencyPostcodeRangeRepository;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AgencyServiceApplication.class)
 @TestPropertySource(properties = "spring.profiles.active=testing")
 @AutoConfigureTestDatabase(replace = Replace.ANY)
@@ -41,9 +40,9 @@ public class AgencyPostcodeRangeAdminServiceIT extends AgencyPostcodeRangeAdminS
     super.deleteAgencyPostcodeRange_Should_deletePostcodeRange_When_agencyIdExists();
   }
 
-  @Test(expected = NotFoundException.class)
+  @Test
   public void deleteAgencyPostcodeRange_Should_throwNotFound_When_agencyIdNotExists() {
-    super.deleteAgencyPostcodeRange_Should_throwNotFound_When_agencyIdNotExists();
+    assertThrows(NotFoundException.class, () -> super.deleteAgencyPostcodeRange_Should_throwNotFound_When_agencyIdNotExists());
   }
 
 }

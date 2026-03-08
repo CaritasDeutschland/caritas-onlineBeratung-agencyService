@@ -3,26 +3,26 @@ package de.caritas.cob.agencyservice.api.service;
 import de.caritas.cob.agencyservice.AgencyServiceApplication;
 import de.caritas.cob.agencyservice.api.exception.MissingConsultingTypeException;
 import de.caritas.cob.agencyservice.api.tenant.TenantContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import de.caritas.cob.agencyservice.tenantservice.generated.web.model.RestrictedTenantDTO;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AgencyServiceApplication.class)
 @TestPropertySource(properties = "spring.profiles.active=testing")
 @AutoConfigureTestDatabase(replace = Replace.ANY)
@@ -35,12 +35,16 @@ public class AgencyServiceTenantAwareIT extends AgencyServiceITBase {
   @Autowired
   private PlatformTransactionManager transactionManager;
 
-  @Before
+  @MockBean
+  TenantService tenantService;
+
+  @BeforeEach
   public void beforeEach() {
     TenantContext.setCurrentTenant(1L);
+    Mockito.when(tenantService.getRestrictedTenantDataByTenantId(Mockito.anyLong())).thenReturn(new RestrictedTenantDTO());
   }
 
-  @After
+  @AfterEach
   public void afterEach() {
     TenantContext.clear();
   }

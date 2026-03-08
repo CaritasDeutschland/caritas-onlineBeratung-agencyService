@@ -1,34 +1,39 @@
 package de.caritas.cob.agencyservice.api.admin.validation;
 
-import static de.caritas.cob.agencyservice.testHelper.TestConstants.CONSULTING_TYPE_SETTINGS_KREUZBUND;
 import static de.caritas.cob.agencyservice.testHelper.TestConstants.CONSULTING_TYPE_SETTINGS_SUCHT;
 import static de.caritas.cob.agencyservice.testHelper.TestConstants.CONSULTING_TYPE_SUCHT;
 import static de.caritas.cob.agencyservice.testHelper.TestConstants.INVALID_CONSULTING_TYPE_VALUE;
-import static de.caritas.cob.agencyservice.testHelper.TestConstants.INVALID_DIOCESE_ID;
 import static de.caritas.cob.agencyservice.testHelper.TestConstants.INVALID_POSTCODE;
 import static de.caritas.cob.agencyservice.testHelper.TestConstants.VALID_POSTCODE;
 import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import de.caritas.cob.agencyservice.AgencyServiceApplication;
+
 import de.caritas.cob.agencyservice.api.admin.service.UserAdminService;
+import de.caritas.cob.agencyservice.api.admin.validation.validators.AgencyDataProtectionValidator;
 import de.caritas.cob.agencyservice.api.exception.MissingConsultingTypeException;
 import de.caritas.cob.agencyservice.api.exception.httpresponses.InvalidConsultingTypeException;
-import de.caritas.cob.agencyservice.api.exception.httpresponses.InvalidDioceseException;
 import de.caritas.cob.agencyservice.api.exception.httpresponses.InvalidOfflineStatusException;
 import de.caritas.cob.agencyservice.api.exception.httpresponses.InvalidPostcodeException;
+import de.caritas.cob.agencyservice.api.service.TenantService;
+import de.caritas.cob.agencyservice.api.util.AuthenticatedUser;
 import de.caritas.cob.agencyservice.api.manager.consultingtype.ConsultingTypeManager;
 import de.caritas.cob.agencyservice.api.model.AgencyDTO;
 import de.caritas.cob.agencyservice.api.model.UpdateAgencyDTO;
 import de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.ExtendedConsultingTypeResponseDTO;
-import de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.WhiteSpotDTO;
+import de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.ExtendedConsultingTypeResponseDTOAllOfWhiteSpot;
+import de.caritas.cob.agencyservice.tenantservice.generated.web.model.RestrictedTenantDTO;
 import de.caritas.cob.agencyservice.useradminservice.generated.web.model.ConsultantAdminResponseDTO;
+import org.aspectj.lang.annotation.Before;
 import org.jeasy.random.EasyRandom;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
@@ -37,14 +42,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AgencyServiceApplication.class)
 @TestPropertySource(properties = "spring.profiles.active=testing")
 @AutoConfigureTestDatabase(replace = Replace.ANY)
 @DirtiesContext(classMode = ClassMode.BEFORE_CLASS)
-public class AgencyValidatorIT {
+class AgencyValidatorIT {
 
   @Autowired
   private AgencyValidator agencyValidator;
@@ -55,61 +58,65 @@ public class AgencyValidatorIT {
   @MockBean
   private ConsultingTypeManager consultingTypeManager;
 
-  @Test(expected = InvalidPostcodeException.class)
-  public void validate_Should_ThrowInvalidPostcodeException_WhenCreateAndAgencyPostcodeIsInvalid() {
-    AgencyDTO agencyDTO = getValidAgencyDTO();
-    agencyDTO.setPostcode(INVALID_POSTCODE);
-    agencyValidator.validate(agencyDTO);
+  @MockBean
+  private AuthenticatedUser authenticatedUser;
+
+  @MockBean TenantService tenantService;
+
+  @MockBean
+  AgencyDataProtectionValidator agencyDataProtectionValidator;
+
+
+  @BeforeEach
+  public void setUp() {
+    Mockito.when(tenantService.getRestrictedTenantDataByTenantId(Mockito.anyLong())).thenReturn(new RestrictedTenantDTO());
   }
 
   @Test
-  public void validate_Should_NotThrowInvalidPostcodeException_WhenCreateAndAgencyPostcodeIsValid() {
+  void validate_Should_ThrowInvalidPostcodeException_WhenCreateAndAgencyPostcodeIsInvalid() {
+    assertThrows(InvalidPostcodeException.class, () -> {
+      AgencyDTO agencyDTO = getValidAgencyDTO();
+      agencyDTO.setPostcode(INVALID_POSTCODE);
+      agencyValidator.validate(agencyDTO);
+    });
+  }
+
+  @Test
+  void validate_Should_NotThrowInvalidPostcodeException_WhenCreateAndAgencyPostcodeIsValid() {
     AgencyDTO agencyDTO = getValidAgencyDTO();
     agencyDTO.setPostcode(VALID_POSTCODE);
     agencyValidator.validate(agencyDTO);
   }
 
-  @Test(expected = InvalidConsultingTypeException.class)
-  public void validate_Should_ThrowInvalidConsultingTypeException_WhenCreateAndAgencyConsultingTypeIsInvalid()
-      throws MissingConsultingTypeException {
-    when(consultingTypeManager.getConsultingTypeSettings(anyInt())).thenThrow(new MissingConsultingTypeException(""));
-    AgencyDTO agencyDTO = getValidAgencyDTO();
-    agencyDTO.setConsultingType(INVALID_CONSULTING_TYPE_VALUE);
-    agencyValidator.validate(agencyDTO);
+  @Test
+  void validate_Should_ThrowInvalidConsultingTypeException_WhenCreateAndAgencyConsultingTypeIsInvalid() {
+    assertThrows(InvalidConsultingTypeException.class, () -> {
+      when(consultingTypeManager.getConsultingTypeSettings(anyInt())).thenThrow(new MissingConsultingTypeException(""));
+      AgencyDTO agencyDTO = getValidAgencyDTO();
+      agencyDTO.setConsultingType(INVALID_CONSULTING_TYPE_VALUE);
+      agencyValidator.validate(agencyDTO);
+    });
   }
 
   @Test
-  public void validate_Should_NotThrowInvalidConsultingTypeException_WhenCreateAndAgencyConsultingTypeIsValid() {
+  void validate_Should_NotThrowInvalidConsultingTypeException_WhenCreateAndAgencyConsultingTypeIsValid() {
     AgencyDTO agencyDTO = getValidAgencyDTO();
     agencyDTO.setConsultingType(CONSULTING_TYPE_SUCHT);
     agencyValidator.validate(agencyDTO);
   }
 
-  @Test(expected = InvalidDioceseException.class)
-  public void validate_Should_ThrowInvalidDioceseException_WhenCreateAndAgencyDioceseIdIsInvalid() {
-    AgencyDTO agencyDTO = getValidAgencyDTO();
-    agencyDTO.setDioceseId(INVALID_DIOCESE_ID);
-    agencyValidator.validate(agencyDTO);
+  @Test
+  void validate_Should_ThrowInvalidPostcodeException_WhenUpdateAndAgencyPostcodeIsInvalid() {
+    assertThrows(InvalidPostcodeException.class, () -> {
+      when(consultingTypeManager.getConsultingTypeSettings(0)).thenReturn(CONSULTING_TYPE_SETTINGS_SUCHT);
+      UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
+      updateAgencyDTO.setPostcode(INVALID_POSTCODE);
+      agencyValidator.validate(1L, updateAgencyDTO);
+    });
   }
 
   @Test
-  public void validate_Should_NotThrowInvalidDioceseException_WhenCreateAndAgencyDioceseIdIsValid() {
-    AgencyDTO agencyDTO = getValidAgencyDTO();
-    agencyDTO.setDioceseId(0L);
-    agencyValidator.validate(agencyDTO);
-  }
-
-  @Test(expected = InvalidPostcodeException.class)
-  public void validate_Should_ThrowInvalidPostcodeException_WhenUpdateAndAgencyPostcodeIsInvalid()
-      throws MissingConsultingTypeException {
-    when(consultingTypeManager.getConsultingTypeSettings(0)).thenReturn(CONSULTING_TYPE_SETTINGS_SUCHT);
-    UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
-    updateAgencyDTO.setPostcode(INVALID_POSTCODE);
-    agencyValidator.validate(1L, updateAgencyDTO);
-  }
-
-  @Test
-  public void validate_Should_NotThrowInvalidPostcodeException_WhenUpdateAndAgencyPostcodeIsValid()
+  void validate_Should_NotThrowInvalidPostcodeException_WhenUpdateAndAgencyPostcodeIsValid()
       throws MissingConsultingTypeException {
     when(consultingTypeManager.getConsultingTypeSettings(0)).thenReturn(CONSULTING_TYPE_SETTINGS_SUCHT);
     UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
@@ -117,36 +124,21 @@ public class AgencyValidatorIT {
     agencyValidator.validate(1L, updateAgencyDTO);
   }
 
-  @Test(expected = InvalidDioceseException.class)
-  public void validate_Should_ThrowInvalidDioceseException_WhenUpdateAndAgencyDioceseIdIsInvalid() {
-    UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
-    updateAgencyDTO.setDioceseId(INVALID_DIOCESE_ID);
-    agencyValidator.validate(1L, updateAgencyDTO);
+  @Test
+  void validate_Should_ThrowInvalidOfflineStatusException_WhenUpdateAndOfflineStatusIsInvalid() {
+    assertThrows(InvalidOfflineStatusException.class, () -> {
+      EasyRandom easyRandom = new EasyRandom();
+      UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
+      updateAgencyDTO.setOffline(false);
+      var extendedConsultingTypeResponseDTO = new ExtendedConsultingTypeResponseDTO();
+      extendedConsultingTypeResponseDTO.setWhiteSpot(easyRandom.nextObject(ExtendedConsultingTypeResponseDTOAllOfWhiteSpot.class));
+      when(consultingTypeManager.getConsultingTypeSettings(19)).thenReturn(extendedConsultingTypeResponseDTO);
+      agencyValidator.validate(1734L, updateAgencyDTO);
+    });
   }
 
   @Test
-  public void validate_Should_NotThrowInvalidDioceseException_WhenUpdateAndAgencyDioceseIdIsValid()
-      throws MissingConsultingTypeException {
-    when(consultingTypeManager.getConsultingTypeSettings(0)).thenReturn(CONSULTING_TYPE_SETTINGS_SUCHT);
-    UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
-    updateAgencyDTO.setDioceseId(0L);
-    agencyValidator.validate(1L, updateAgencyDTO);
-  }
-
-  @Test(expected = InvalidOfflineStatusException.class)
-  public void validate_Should_ThrowInvalidOfflineStatusException_WhenUpdateAndOfflineStatusIsInvalid()
-      throws MissingConsultingTypeException {
-    EasyRandom easyRandom = new EasyRandom();
-    UpdateAgencyDTO updateAgencyDTO = getValidUpdateAgencyDTO();
-    updateAgencyDTO.setOffline(false);
-    var extendedConsultingTypeResponseDTO = new ExtendedConsultingTypeResponseDTO();
-    extendedConsultingTypeResponseDTO.setWhiteSpot(easyRandom.nextObject(WhiteSpotDTO.class));
-    when(consultingTypeManager.getConsultingTypeSettings(19)).thenReturn(extendedConsultingTypeResponseDTO);
-    agencyValidator.validate(1734L, updateAgencyDTO);
-  }
-
-  @Test
-  public void validate_Should_NotThrowInvalidOfflineStatusException_WhenUpdateAndOfflineStatusIsValid()
+  void validate_Should_NotThrowInvalidOfflineStatusException_WhenUpdateAndOfflineStatusIsValid()
       throws MissingConsultingTypeException {
     when(this.userAdminService.getConsultantsOfAgency(anyLong(), anyInt(), anyInt()))
         .thenReturn(singletonList(mock(ConsultantAdminResponseDTO.class)));
@@ -164,19 +156,15 @@ public class AgencyValidatorIT {
     AgencyDTO agencyDTO = easyRandom.nextObject(AgencyDTO.class);
     agencyDTO.setConsultingType(CONSULTING_TYPE_SUCHT);
     agencyDTO.setPostcode(VALID_POSTCODE);
-    agencyDTO.setDioceseId(0L);
     return agencyDTO;
 
   }
 
   private UpdateAgencyDTO getValidUpdateAgencyDTO() {
-
     EasyRandom easyRandom = new EasyRandom();
     UpdateAgencyDTO updateAgencyDTO = easyRandom.nextObject(UpdateAgencyDTO.class);
     updateAgencyDTO.setPostcode(VALID_POSTCODE);
-    updateAgencyDTO.setDioceseId(0L);
     return updateAgencyDTO;
-
   }
 
 

@@ -1,5 +1,6 @@
 package de.caritas.cob.agencyservice.api.service;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,16 +16,16 @@ import de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.Ba
 import de.caritas.cob.agencyservice.tenantservice.generated.web.model.RestrictedTenantDTO;
 import de.caritas.cob.agencyservice.tenantservice.generated.web.model.Settings;
 import java.util.Optional;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AgencyServiceTenantAwareTest {
 
   @InjectMocks
@@ -42,41 +43,48 @@ public class AgencyServiceTenantAwareTest {
   @Mock
   private AgencyRepository agencyRepository;
 
+  @Mock
+  private CentralDataProtectionTemplateService centralDataProtectionTemplateService;
+
+  @Mock
+  private ApplicationSettingsService applicationSettingsService;
+
   private static final Long TENANT_ID = 1L;
 
-  @Before
+  @BeforeEach
   public void before() {
     ReflectionTestUtils.setField(agencyService, "multitenancy", true);
     TenantContext.setCurrentTenant(TENANT_ID);
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     ReflectionTestUtils.setField(agencyService, "topicsFeatureEnabled", false);
     ReflectionTestUtils.setField(agencyService, "multitenancy", false);
     TenantContext.clear();
   }
 
-  @Test(expected = BadRequestException.class)
-  public void getAgencies_Should_throwBadRequestException_When_topicIdNotProvidedAndFeatureEnabled()
-      throws MissingConsultingTypeException {
-    // given
-    ReflectionTestUtils.setField(agencyService, "topicsFeatureEnabled", true);
-    ExtendedConsultingTypeResponseDTO dto = new ExtendedConsultingTypeResponseDTO().registration(
-        new BasicConsultingTypeResponseDTORegistration().minPostcodeSize(5));
-    when(consultingTypeManager.getConsultingTypeSettings(1)).thenReturn(dto);
-    RestrictedTenantDTO restrictedTenantDTO = new RestrictedTenantDTO().settings(
-        new Settings().topicsInRegistrationEnabled(true));
-    when(tenantService.getRestrictedTenantDataByTenantId(TENANT_ID)).thenReturn(
-        restrictedTenantDTO);
+  @Test
+  public void getAgencies_Should_throwBadRequestException_When_topicIdNotProvidedAndFeatureEnabled() {
+    assertThrows(BadRequestException.class, () -> {
+      // given
+      ReflectionTestUtils.setField(agencyService, "topicsFeatureEnabled", true);
+      ExtendedConsultingTypeResponseDTO dto = new ExtendedConsultingTypeResponseDTO().registration(
+          new BasicConsultingTypeResponseDTORegistration().minPostcodeSize(5));
+      when(consultingTypeManager.getConsultingTypeSettings(1)).thenReturn(dto);
+      RestrictedTenantDTO restrictedTenantDTO = new RestrictedTenantDTO().settings(
+          new Settings().topicsInRegistrationEnabled(true));
+      when(tenantService.getRestrictedTenantDataByTenantId(TENANT_ID)).thenReturn(
+          restrictedTenantDTO);
 
-    // when
-    this.agencyService.getAgencies("12123", 1, Optional.empty());
+      // when
+      this.agencyService.getAgencies(Optional.of("12123"), 1, Optional.empty());
 
-    // then
-    verify(agencyRepository).searchWithTopic("12123", 5, 1, 2, null,
-        null,
-        TENANT_ID);
+      // then
+      verify(agencyRepository).searchWithTopic("12123", 5, 1, 2, null,
+          null, null,
+          TENANT_ID);
+    });
   }
 
   @Test
@@ -93,11 +101,11 @@ public class AgencyServiceTenantAwareTest {
         restrictedTenantDTO);
 
     // when
-    this.agencyService.getAgencies("12123", 1, Optional.of(2), Optional.empty(), Optional.empty());
+    this.agencyService.getAgencies(Optional.of("12123"), 1, Optional.of(2), Optional.empty(), Optional.empty(), Optional.empty());
 
     // then
     verify(agencyRepository).searchWithTopic("12123", 5, 1, 2, null,
-        null,
+        null, null,
         TENANT_ID);
   }
 }

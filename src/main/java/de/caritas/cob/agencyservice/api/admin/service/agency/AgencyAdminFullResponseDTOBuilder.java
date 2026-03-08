@@ -1,5 +1,6 @@
 package de.caritas.cob.agencyservice.api.admin.service.agency;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import de.caritas.cob.agencyservice.api.admin.hallink.AgencyLinksBuilder;
 import de.caritas.cob.agencyservice.api.model.AgencyAdminFullResponseDTO;
@@ -10,7 +11,6 @@ import de.caritas.cob.agencyservice.api.model.TopicDTO;
 import de.caritas.cob.agencyservice.api.repository.agency.Agency;
 import de.caritas.cob.agencyservice.api.repository.agencytopic.AgencyTopic;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class AgencyAdminFullResponseDTOBuilder {
 
   private final @NonNull Agency agency;
+
 
   /**
    * Creates an {@link AgencyAdminFullResponseDTO()} with HAL-Links from an {@link Agency}
@@ -37,7 +38,7 @@ public class AgencyAdminFullResponseDTOBuilder {
   private AgencyAdminResponseDTO createAgency() {
     var responseDTO = new AgencyAdminResponseDTO()
         .id(this.agency.getId())
-        .dioceseId(this.agency.getDioceseId())
+        .tenantId(agency.getTenantId())
         .name(this.agency.getName())
         .city(this.agency.getCity())
         .consultingType(this.agency.getConsultingTypeId())
@@ -48,12 +49,24 @@ public class AgencyAdminFullResponseDTOBuilder {
         .external((this.agency.isExternal()))
         .offline(this.agency.isOffline())
         .topics(getTopics())
+        .counsellingRelations(splitToList(agency.getCounsellingRelations()))
         .createDate(String.valueOf(this.agency.getCreateDate()))
         .updateDate(String.valueOf(this.agency.getUpdateDate()))
-        .deleteDate(String.valueOf(this.agency.getDeleteDate()));
+        .deleteDate(String.valueOf(this.agency.getDeleteDate()))
+        .dataProtection(new DataProtectionDTOBuilder(this.agency).fromAgency())
+        .agencyLogo(this.agency.getAgencyLogo());
 
     responseDTO.demographics(getDemographics(this.agency));
     return responseDTO;
+  }
+
+  private List<AgencyAdminResponseDTO.CounsellingRelationsEnum> splitToList(String counsellingRelationsAsCommaSeparatedString) {
+    if (counsellingRelationsAsCommaSeparatedString == null) {
+      return Lists.newArrayList();
+    } else {
+      return Splitter.on(",").trimResults()
+          .splitToList(counsellingRelationsAsCommaSeparatedString).stream().map(AgencyAdminResponseDTO.CounsellingRelationsEnum::valueOf).toList();
+    }
   }
 
   private DemographicsDTO getDemographics(Agency agency) {
@@ -62,6 +75,8 @@ public class AgencyAdminFullResponseDTOBuilder {
   }
 
   private List<TopicDTO> getTopics() {
+    // workaround to force loading of topics
+
     var agencyTopics = agency.getAgencyTopics();
     if (agencyTopics != null) {
       return getTopics(agencyTopics);
@@ -71,7 +86,16 @@ public class AgencyAdminFullResponseDTOBuilder {
   }
 
   private List<TopicDTO> getTopics(List<AgencyTopic> agencyTopics) {
-    return agencyTopics.stream().map(AgencyTopic::getTopicData).collect(Collectors.toList());
+    return agencyTopics.stream().map(agencyTopic -> createTopicDTO(agencyTopic)).toList();
+  }
+
+  private TopicDTO createTopicDTO(AgencyTopic agencyTopic) {
+    return new TopicDTO().id(agencyTopic.getTopicId())
+        .name(agencyTopic.getTopicData().getName())
+        .description(agencyTopic.getTopicData().getDescription())
+        .status(agencyTopic.getTopicData().getStatus())
+        .internalIdentifier(agencyTopic.getTopicData().getInternalIdentifier());
+
   }
 
   private AgencyLinks createAgencyLinks() {

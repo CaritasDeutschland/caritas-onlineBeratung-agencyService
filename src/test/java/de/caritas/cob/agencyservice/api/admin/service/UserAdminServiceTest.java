@@ -22,17 +22,17 @@ import de.caritas.cob.agencyservice.useradminservice.generated.web.model.Sort.Fi
 import de.caritas.cob.agencyservice.useradminservice.generated.web.model.Sort.OrderEnum;
 import java.util.List;
 import org.jeasy.random.EasyRandom;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@RunWith(MockitoJUnitRunner.class)
-public class UserAdminServiceTest {
+@ExtendWith(MockitoExtension.class)
+class UserAdminServiceTest {
 
   @InjectMocks
   private UserAdminService userAdminService;
@@ -54,18 +54,16 @@ public class UserAdminServiceTest {
 
   private final HttpHeaders httpHeaders = new EasyRandom().nextObject(HttpHeaders.class);
 
-  @Before
-  public void setup() {
-    when(this.adminUserControllerApi.getApiClient()).thenReturn(this.apiClient);
+  @BeforeEach
+  void setup() {
     when(this.securityHeaderSupplier.getKeycloakAndCsrfHttpHeaders())
         .thenReturn(this.httpHeaders);
-    when(userAdminServiceApiControllerFactory.createControllerApi()).thenReturn(adminUserControllerApi);
   }
 
   @Test
-  public void adaptRelatedConsultantsForChange_Should_callServicesCorrectly() {
+  void adaptRelatedConsultantsForChange_Should_callServicesCorrectly() {
     Long agencyId = 1L;
-
+    when(userAdminServiceApiControllerFactory.createControllerApi()).thenReturn(adminUserControllerApi);
     this.userAdminService.adaptRelatedConsultantsForChange(agencyId, TEAM_AGENCY.getValue());
 
     verify(this.adminUserControllerApi, times(1)).changeAgencyType(agencyId,
@@ -74,10 +72,11 @@ public class UserAdminServiceTest {
   }
 
   @Test
-  public void getConsultantsOfAgency_Should_callServicesCorrectly() {
+  void getConsultantsOfAgency_Should_callServicesCorrectly() {
     Long agencyId = 1L;
     int currentPage = 1;
     int perPage = 1;
+    when(userAdminServiceApiControllerFactory.createControllerApi()).thenReturn(adminUserControllerApi);
     when(this.adminUserControllerApi.getConsultants(any(), any(), any(), any()))
         .thenReturn(new EasyRandom().nextObject(ConsultantSearchResultDTO.class));
     this.userAdminService.getConsultantsOfAgency(agencyId, currentPage, perPage);
@@ -89,7 +88,7 @@ public class UserAdminServiceTest {
   }
 
   @Test
-  public void addTenantHeader_WhenMultitenacy_Enabled() {
+  void addTenantHeader_WhenMultitenacy_Enabled() {
     TenantContext.setCurrentTenant(1L);
     ApiClient apiClient = new ApiClient();
     TenantHeaderSupplier tenantHeaderSupplier = new TenantHeaderSupplier();

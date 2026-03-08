@@ -1,10 +1,10 @@
 package de.caritas.cob.agencyservice.api.exception.customheader;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import de.caritas.cob.agencyservice.api.exception.httpresponses.HttpStatusExceptionReason;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 
 public class CustomHttpHeaderTest {
