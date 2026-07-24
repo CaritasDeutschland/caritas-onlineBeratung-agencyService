@@ -134,7 +134,7 @@ paths:
     put:
       tags:
         - agency-controller
-      summary: 'Sets/updates the shared registration redirect URL of an agency (CARITAS-976).
+      summary: 'Sets/updates the shared registration redirect URL of an agency.
         Intended to be called by the userService after it has verified that the requesting
         consultant is assigned to the agency. [Authorization: Consultant]'
       operationId: setAgencyRegistrationUrl
@@ -213,7 +213,7 @@ components:
           example: 12
         registrationUrl:
           type: string
-          description: "Shared registration redirect URL (CARITAS-976), or null if none set"
+          description: "Shared registration redirect URL, or null if none set"
           example: "https://caritas-onlineberatung.de/registration/agency"
 
     FullAgencyResponseDTO:

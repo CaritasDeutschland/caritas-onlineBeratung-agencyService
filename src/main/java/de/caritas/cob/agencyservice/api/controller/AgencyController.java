@@ -85,7 +85,7 @@ public class AgencyController implements AgenciesApi {
   }
 
   /**
-   * CARITAS-976: Sets, updates or removes the shared registration redirect URL of an agency.
+   * Sets, updates or removes the shared registration redirect URL of an agency.
    * Membership of the requesting consultant is verified upstream in the userService. A {@code
    * null}/blank URL removes the override while still recording who removed it and when.
    *

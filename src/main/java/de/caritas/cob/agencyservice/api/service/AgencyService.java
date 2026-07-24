@@ -63,7 +63,7 @@ public class AgencyService {
   @Value("${feature.multitenancy.with.single.domain.enabled}")
   private boolean multitenancyWithSingleDomain;
 
-  /** CARITAS-976: only URLs containing this domain may be used as a registration redirect. */
+  /** only URLs containing this domain may be used as a registration redirect. */
   private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
 
   /**
@@ -326,7 +326,7 @@ public class AgencyService {
   }
 
   /**
-   * CARITAS-976: Sets, updates or removes the shared registration redirect URL of an agency. When a
+   * Sets, updates or removes the shared registration redirect URL of an agency. When a
    * URL is provided it must contain the domain {@value #ALLOWED_REGISTRATION_DOMAIN}. A {@code
    * null}/blank URL removes the override, but - unlike a hard delete - the attribution
    * ({@code registration_url_added_by}) and the date ({@code registration_url_added_date}) are kept
@@ -346,7 +346,7 @@ public class AgencyService {
     var agency = this.agencyRepository.findById(agencyId)
         .orElseThrow(NotFoundException::new);
     agency.setRegistrationUrl(isRemoval ? null : registrationUrl.trim());
-    // CARITAS-976: record who last set/removed the URL and when, also on removal.
+    // record who last set/removed the URL and when, also on removal.
     agency.setRegistrationUrlAddedBy(addedBy);
     agency.setRegistrationUrlAddedDate(LocalDateTime.now(ZoneOffset.UTC));
     agency.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));

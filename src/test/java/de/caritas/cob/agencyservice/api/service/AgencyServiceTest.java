@@ -325,7 +325,6 @@ public class AgencyServiceTest {
         TENANT_ID);
   }
 
-  // CARITAS-976
 
   private static final String CONSULTANT_ID = "aadc0ecf-c048-4bfc-857d-8c9b2e425500";
   private static final String VALID_REGISTRATION_URL =
@@ -368,7 +367,7 @@ public class AgencyServiceTest {
     // when
     this.agencyService.setRegistrationUrl(AGENCY_ID, "  ", CONSULTANT_ID);
 
-    // then - CARITAS-976: url is cleared but who removed it and when is recorded
+    // then - url is cleared but who removed it and when is recorded
     var captor = org.mockito.ArgumentCaptor.forClass(Agency.class);
     verify(agencyRepository).save(captor.capture());
     var saved = captor.getValue();

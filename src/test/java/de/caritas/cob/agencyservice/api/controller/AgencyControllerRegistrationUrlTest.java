@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 
-/** CARITAS-976 tests for the registration url endpoint of {@link AgencyController}. */
+/** tests for the registration url endpoint of {@link AgencyController}. */
 @RunWith(MockitoJUnitRunner.class)
 public class AgencyControllerRegistrationUrlTest {
 
