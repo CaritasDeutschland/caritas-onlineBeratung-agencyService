@@ -360,7 +360,7 @@ public class AgencyServiceTest {
   }
 
   @Test
-  public void setRegistrationUrl_Should_clearOverride_When_urlIsBlank() {
+  public void setRegistrationUrl_Should_clearUrlButKeepAttribution_When_urlIsBlank() {
     // given
     var agency = new EasyRandom().nextObject(Agency.class);
     when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
@@ -368,13 +368,13 @@ public class AgencyServiceTest {
     // when
     this.agencyService.setRegistrationUrl(AGENCY_ID, "  ", CONSULTANT_ID);
 
-    // then
+    // then - CARITAS-976: url is cleared but who removed it and when is recorded
     var captor = org.mockito.ArgumentCaptor.forClass(Agency.class);
     verify(agencyRepository).save(captor.capture());
     var saved = captor.getValue();
     assertThat(saved.getRegistrationUrl(), org.hamcrest.CoreMatchers.nullValue());
-    assertThat(saved.getRegistrationUrlAddedBy(), org.hamcrest.CoreMatchers.nullValue());
-    assertThat(saved.getRegistrationUrlAddedDate(), org.hamcrest.CoreMatchers.nullValue());
+    assertEquals(CONSULTANT_ID, saved.getRegistrationUrlAddedBy());
+    assertThat(saved.getRegistrationUrlAddedDate(), instanceOf(java.time.LocalDateTime.class));
   }
 
   @Test(expected = NotFoundException.class)
@@ -384,61 +384,5 @@ public class AgencyServiceTest {
 
     // when
     this.agencyService.setRegistrationUrl(AGENCY_ID, VALID_REGISTRATION_URL, CONSULTANT_ID);
-  }
-
-  @Test
-  public void deleteRegistrationUrl_Should_clearUrlAndAttribution() {
-    // given
-    var agency = new EasyRandom().nextObject(Agency.class);
-    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
-
-    // when
-    this.agencyService.deleteRegistrationUrl(AGENCY_ID);
-
-    // then
-    var captor = org.mockito.ArgumentCaptor.forClass(Agency.class);
-    verify(agencyRepository).save(captor.capture());
-    var saved = captor.getValue();
-    assertThat(saved.getRegistrationUrl(), org.hamcrest.CoreMatchers.nullValue());
-    assertThat(saved.getRegistrationUrlAddedBy(), org.hamcrest.CoreMatchers.nullValue());
-    assertThat(saved.getRegistrationUrlAddedDate(), org.hamcrest.CoreMatchers.nullValue());
-  }
-
-  @Test
-  public void resolveRegistrationRedirectTarget_Should_returnOverride_When_present() {
-    // given
-    var agency = new EasyRandom().nextObject(Agency.class);
-    agency.setRegistrationUrl(VALID_REGISTRATION_URL);
-    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
-
-    // when
-    var target = this.agencyService.resolveRegistrationRedirectTarget(AGENCY_ID);
-
-    // then
-    assertEquals(VALID_REGISTRATION_URL, target);
-  }
-
-  @Test
-  public void resolveRegistrationRedirectTarget_Should_returnDefaultDeepLink_When_noOverride() {
-    // given
-    ReflectionTestUtils.setField(agencyService, "appBaseUrl", "https://app.example.com");
-    var agency = new EasyRandom().nextObject(Agency.class);
-    agency.setRegistrationUrl(null);
-    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
-
-    // when
-    var target = this.agencyService.resolveRegistrationRedirectTarget(AGENCY_ID);
-
-    // then
-    assertEquals("https://app.example.com/registration?aid=" + AGENCY_ID, target);
-  }
-
-  @Test(expected = NotFoundException.class)
-  public void resolveRegistrationRedirectTarget_Should_throwNotFound_When_agencyDoesNotExist() {
-    // given
-    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.empty());
-
-    // when
-    this.agencyService.resolveRegistrationRedirectTarget(AGENCY_ID);
   }
 }

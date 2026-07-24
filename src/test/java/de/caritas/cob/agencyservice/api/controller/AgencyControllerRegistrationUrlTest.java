@@ -2,7 +2,6 @@ package de.caritas.cob.agencyservice.api.controller;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import de.caritas.cob.agencyservice.api.model.RegistrationUrlDTO;
 import de.caritas.cob.agencyservice.api.service.AgencyService;
@@ -13,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 
-/** CARITAS-976 tests for the registration redirect endpoints of {@link AgencyController}. */
+/** CARITAS-976 tests for the registration url endpoint of {@link AgencyController}. */
 @RunWith(MockitoJUnitRunner.class)
 public class AgencyControllerRegistrationUrlTest {
 
@@ -36,20 +35,12 @@ public class AgencyControllerRegistrationUrlTest {
   }
 
   @Test
-  public void deleteAgencyRegistrationUrl_Should_delegateAndReturnNoContent() {
-    var response = agencyController.deleteAgencyRegistrationUrl(AGENCY_ID);
+  public void setAgencyRegistrationUrl_Should_delegateRemoval_When_urlIsBlank() {
+    var dto = new RegistrationUrlDTO().registrationUrl(null).addedBy(CONSULTANT_ID);
 
-    verify(agencyService).deleteRegistrationUrl(AGENCY_ID);
+    var response = agencyController.setAgencyRegistrationUrl(AGENCY_ID, dto);
+
+    verify(agencyService).setRegistrationUrl(AGENCY_ID, null, CONSULTANT_ID);
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-  }
-
-  @Test
-  public void redirectAgencyRegistration_Should_return301WithLocation() {
-    when(agencyService.resolveRegistrationRedirectTarget(AGENCY_ID)).thenReturn(URL);
-
-    var response = agencyController.redirectAgencyRegistration(AGENCY_ID);
-
-    assertEquals(HttpStatus.MOVED_PERMANENTLY, response.getStatusCode());
-    assertEquals(URL, response.getHeaders().getLocation().toString());
   }
 }

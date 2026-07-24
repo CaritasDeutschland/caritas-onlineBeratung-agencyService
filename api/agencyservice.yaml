@@ -154,60 +154,11 @@ paths:
               $ref: '#/components/schemas/RegistrationUrlDTO'
       responses:
         204:
-          description: NO CONTENT - successfully updated
+          description: NO CONTENT - successfully updated (a null/blank url removes the override)
         400:
           description: BAD REQUEST - invalid url (must contain caritas-onlineberatung.de)
         403:
           description: FORBIDDEN - no/invalid CSRF token
-        404:
-          description: NOT FOUND - agency does not exist
-        500:
-          description: INTERNAL SERVER ERROR - server encountered unexpected condition
-    delete:
-      tags:
-        - agency-controller
-      summary: 'Removes the shared registration redirect URL of an agency (CARITAS-976).
-        [Authorization: Consultant]'
-      operationId: deleteAgencyRegistrationUrl
-      parameters:
-        - name: agencyId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-            example: 20
-      responses:
-        204:
-          description: NO CONTENT - successfully removed
-        403:
-          description: FORBIDDEN - no/invalid CSRF token
-        404:
-          description: NOT FOUND - agency does not exist
-        500:
-          description: INTERNAL SERVER ERROR - server encountered unexpected condition
-  /agencies/{agencyId}/registration-redirect:
-    get:
-      tags:
-        - agency-controller
-      summary: 'Issues a 301 redirect to the agency''s registration URL. If an override URL is set
-        it redirects there, otherwise to the default registration deep link. [Authorization: none]'
-      operationId: redirectAgencyRegistration
-      parameters:
-        - name: agencyId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-            example: 20
-      responses:
-        301:
-          description: MOVED PERMANENTLY - Location header points to the target registration URL
-          headers:
-            Location:
-              schema:
-                type: string
         404:
           description: NOT FOUND - agency does not exist
         500:
