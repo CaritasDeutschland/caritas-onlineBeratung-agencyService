@@ -63,6 +63,12 @@ public class AgencyService {
   @Value("${feature.multitenancy.with.single.domain.enabled}")
   private boolean multitenancyWithSingleDomain;
 
+  @Value("${app.base.url}")
+  private String appBaseUrl;
+
+  /** CARITAS-976: only URLs containing this domain may be used as a registration redirect. */
+  private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
+
   /**
    * Returns a list of {@link AgencyResponseDTO} which match the provided agencyIds.
    *
@@ -283,7 +289,8 @@ public class AgencyService {
         .teamAgency(agency.isTeamAgency())
         .offline(agency.isOffline())
         .tenantId(agency.getTenantId())
-        .consultingType(agency.getConsultingTypeId());
+        .consultingType(agency.getConsultingTypeId())
+        .registrationUrl(agency.getRegistrationUrl());
   }
 
 
@@ -319,6 +326,68 @@ public class AgencyService {
     agency.setOffline(true);
     agency.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
     this.agencyRepository.save(agency);
+  }
+
+  /**
+   * CARITAS-976: Sets or updates the shared registration redirect URL of an agency. The URL must
+   * contain the domain {@value #ALLOWED_REGISTRATION_DOMAIN}. Membership of the requesting
+   * consultant is verified upstream in the userService.
+   *
+   * @param agencyId        the agency to update
+   * @param registrationUrl the new URL, or {@code null}/blank to remove the override
+   * @param addedBy         the consultant id (UUID) that set the URL, forwarded by the userService
+   */
+  public void setRegistrationUrl(Long agencyId, String registrationUrl, String addedBy) {
+    if (registrationUrl == null || registrationUrl.isBlank()) {
+      deleteRegistrationUrl(agencyId);
+      return;
+    }
+    validateRegistrationUrl(registrationUrl);
+    var agency = this.agencyRepository.findById(agencyId)
+        .orElseThrow(NotFoundException::new);
+    agency.setRegistrationUrl(registrationUrl.trim());
+    agency.setRegistrationUrlAddedBy(addedBy);
+    agency.setRegistrationUrlAddedDate(LocalDateTime.now(ZoneOffset.UTC));
+    agency.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
+    this.agencyRepository.save(agency);
+  }
+
+  /**
+   * CARITAS-976: Removes the shared registration redirect URL of an agency (and its attribution).
+   *
+   * @param agencyId the agency to update
+   */
+  public void deleteRegistrationUrl(Long agencyId) {
+    var agency = this.agencyRepository.findById(agencyId)
+        .orElseThrow(NotFoundException::new);
+    agency.setRegistrationUrl(null);
+    agency.setRegistrationUrlAddedBy(null);
+    agency.setRegistrationUrlAddedDate(null);
+    agency.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
+    this.agencyRepository.save(agency);
+  }
+
+  /**
+   * CARITAS-976: Resolves the target of the public registration redirect for an agency: the
+   * override URL if set, otherwise the default registration deep link.
+   *
+   * @param agencyId the agency
+   * @return the absolute URL to redirect to
+   */
+  public String resolveRegistrationRedirectTarget(Long agencyId) {
+    var agency = this.agencyRepository.findById(agencyId)
+        .orElseThrow(NotFoundException::new);
+    if (nonNull(agency.getRegistrationUrl()) && !agency.getRegistrationUrl().isBlank()) {
+      return agency.getRegistrationUrl();
+    }
+    return appBaseUrl + "/registration?aid=" + agencyId;
+  }
+
+  private void validateRegistrationUrl(String registrationUrl) {
+    if (!registrationUrl.toLowerCase().contains(ALLOWED_REGISTRATION_DOMAIN)) {
+      throw new BadRequestException(String.format(
+          "Registration url must contain the domain %s", ALLOWED_REGISTRATION_DOMAIN));
+    }
   }
 
 }

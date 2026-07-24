@@ -4,9 +4,11 @@ import static java.util.Optional.ofNullable;
 
 import de.caritas.cob.agencyservice.api.model.AgencyResponseDTO;
 import de.caritas.cob.agencyservice.api.model.FullAgencyResponseDTO;
+import de.caritas.cob.agencyservice.api.model.RegistrationUrlDTO;
 import de.caritas.cob.agencyservice.api.service.AgencyService;
 import de.caritas.cob.agencyservice.generated.api.controller.AgenciesApi;
 import io.swagger.annotations.Api;
+import java.net.URI;
 import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -81,5 +83,50 @@ public class AgencyController implements AgenciesApi {
     var agencies = this.agencyService.getAgencies(consultingTypeId);
 
     return new ResponseEntity<>(agencies, HttpStatus.OK);
+  }
+
+  /**
+   * CARITAS-976: Sets/updates the shared registration redirect URL of an agency. Membership of the
+   * requesting consultant is verified upstream in the userService.
+   *
+   * @param agencyId           the agency to update
+   * @param registrationUrlDTO the new URL (and the consultant id that set it)
+   * @return 204 No Content
+   */
+  @Override
+  public ResponseEntity<Void> setAgencyRegistrationUrl(
+      @PathVariable("agencyId") Long agencyId, RegistrationUrlDTO registrationUrlDTO) {
+
+    this.agencyService.setRegistrationUrl(
+        agencyId, registrationUrlDTO.getRegistrationUrl(), registrationUrlDTO.getAddedBy());
+
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  /**
+   * CARITAS-976: Removes the shared registration redirect URL of an agency.
+   *
+   * @param agencyId the agency to update
+   * @return 204 No Content
+   */
+  @Override
+  public ResponseEntity<Void> deleteAgencyRegistrationUrl(@PathVariable("agencyId") Long agencyId) {
+    this.agencyService.deleteRegistrationUrl(agencyId);
+
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  /**
+   * CARITAS-976: Issues a 301 redirect to the agency's registration URL (override if set, otherwise
+   * the default registration deep link).
+   *
+   * @param agencyId the agency
+   * @return 301 Moved Permanently with a Location header
+   */
+  @Override
+  public ResponseEntity<Void> redirectAgencyRegistration(@PathVariable("agencyId") Long agencyId) {
+    var target = this.agencyService.resolveRegistrationRedirectTarget(agencyId);
+
+    return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).location(URI.create(target)).build();
   }
 }

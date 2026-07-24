@@ -130,9 +130,104 @@ paths:
           description: FORBIDDEN - no/invalid CSRF token
         500:
           description: INTERNAL SERVER ERROR - server encountered unexpected condition
+  /agencies/{agencyId}/registration-url:
+    put:
+      tags:
+        - agency-controller
+      summary: 'Sets/updates the shared registration redirect URL of an agency (CARITAS-976).
+        Intended to be called by the userService after it has verified that the requesting
+        consultant is assigned to the agency. [Authorization: Consultant]'
+      operationId: setAgencyRegistrationUrl
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/RegistrationUrlDTO'
+      responses:
+        204:
+          description: NO CONTENT - successfully updated
+        400:
+          description: BAD REQUEST - invalid url (must contain caritas-onlineberatung.de)
+        403:
+          description: FORBIDDEN - no/invalid CSRF token
+        404:
+          description: NOT FOUND - agency does not exist
+        500:
+          description: INTERNAL SERVER ERROR - server encountered unexpected condition
+    delete:
+      tags:
+        - agency-controller
+      summary: 'Removes the shared registration redirect URL of an agency (CARITAS-976).
+        [Authorization: Consultant]'
+      operationId: deleteAgencyRegistrationUrl
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20
+      responses:
+        204:
+          description: NO CONTENT - successfully removed
+        403:
+          description: FORBIDDEN - no/invalid CSRF token
+        404:
+          description: NOT FOUND - agency does not exist
+        500:
+          description: INTERNAL SERVER ERROR - server encountered unexpected condition
+  /agencies/{agencyId}/registration-redirect:
+    get:
+      tags:
+        - agency-controller
+      summary: 'Issues a 301 redirect to the agency''s registration URL. If an override URL is set
+        it redirects there, otherwise to the default registration deep link. [Authorization: none]'
+      operationId: redirectAgencyRegistration
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20
+      responses:
+        301:
+          description: MOVED PERMANENTLY - Location header points to the target registration URL
+          headers:
+            Location:
+              schema:
+                type: string
+        404:
+          description: NOT FOUND - agency does not exist
+        500:
+          description: INTERNAL SERVER ERROR - server encountered unexpected condition
 
 components:
   schemas:
+    RegistrationUrlDTO:
+      type: object
+      properties:
+        registrationUrl:
+          type: string
+          maxLength: 500
+          description: "The registration redirect URL. Must contain the domain
+            caritas-onlineberatung.de. Null or empty removes the override."
+          example: "https://caritas-onlineberatung.de/registration/agency"
+        addedBy:
+          type: string
+          maxLength: 36
+          description: "Consultant id (UUID) that set the URL, forwarded by the userService"
     AgencyResponseDTO:
       type: object
       properties:
@@ -165,6 +260,10 @@ components:
           type: integer
           format: int64
           example: 12
+        registrationUrl:
+          type: string
+          description: "Shared registration redirect URL (CARITAS-976), or null if none set"
+          example: "https://caritas-onlineberatung.de/registration/agency"
 
     FullAgencyResponseDTO:
       type: object
