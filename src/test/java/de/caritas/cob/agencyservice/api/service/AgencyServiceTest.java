@@ -324,4 +324,64 @@ public class AgencyServiceTest {
     verify(agencyRepository).searchWithTopic("12123", 5, 1, 2, AGE, GENDER,
         TENANT_ID);
   }
+
+
+  private static final String CONSULTANT_ID = "aadc0ecf-c048-4bfc-857d-8c9b2e425500";
+  private static final String VALID_REGISTRATION_URL =
+      "https://caritas-onlineberatung.de/registration/agency";
+
+  @Test
+  public void setRegistrationUrl_Should_persistUrlAndAttribution_When_urlIsValid() {
+    // given
+    var agency = new EasyRandom().nextObject(Agency.class);
+    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
+
+    // when
+    this.agencyService.setRegistrationUrl(AGENCY_ID, VALID_REGISTRATION_URL, CONSULTANT_ID);
+
+    // then
+    var captor = org.mockito.ArgumentCaptor.forClass(Agency.class);
+    verify(agencyRepository).save(captor.capture());
+    var saved = captor.getValue();
+    assertEquals(VALID_REGISTRATION_URL, saved.getRegistrationUrl());
+    assertEquals(CONSULTANT_ID, saved.getRegistrationUrlAddedBy());
+    assertThat(saved.getRegistrationUrlAddedDate(), instanceOf(java.time.LocalDateTime.class));
+  }
+
+  @Test(expected = BadRequestException.class)
+  public void setRegistrationUrl_Should_throwBadRequest_When_domainIsNotAllowed() {
+    // when
+    this.agencyService.setRegistrationUrl(
+        AGENCY_ID, "https://evil.example.com/registration", CONSULTANT_ID);
+
+    // then
+    verify(agencyRepository, Mockito.never()).save(any());
+  }
+
+  @Test
+  public void setRegistrationUrl_Should_clearUrlButKeepAttribution_When_urlIsBlank() {
+    // given
+    var agency = new EasyRandom().nextObject(Agency.class);
+    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
+
+    // when
+    this.agencyService.setRegistrationUrl(AGENCY_ID, "  ", CONSULTANT_ID);
+
+    // then - url is cleared but who removed it and when is recorded
+    var captor = org.mockito.ArgumentCaptor.forClass(Agency.class);
+    verify(agencyRepository).save(captor.capture());
+    var saved = captor.getValue();
+    assertThat(saved.getRegistrationUrl(), org.hamcrest.CoreMatchers.nullValue());
+    assertEquals(CONSULTANT_ID, saved.getRegistrationUrlAddedBy());
+    assertThat(saved.getRegistrationUrlAddedDate(), instanceOf(java.time.LocalDateTime.class));
+  }
+
+  @Test(expected = NotFoundException.class)
+  public void setRegistrationUrl_Should_throwNotFound_When_agencyDoesNotExist() {
+    // given
+    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.empty());
+
+    // when
+    this.agencyService.setRegistrationUrl(AGENCY_ID, VALID_REGISTRATION_URL, CONSULTANT_ID);
+  }
 }
