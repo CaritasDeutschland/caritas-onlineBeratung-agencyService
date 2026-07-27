@@ -145,6 +145,17 @@ public class Agency implements TenantAware {
   @Type(type = "org.hibernate.type.NumericBooleanType")
   private boolean isExternal;
 
+  @Size(max = 500)
+  @Column(name = "registration_url")
+  private String registrationUrl;
+
+  @Size(max = 36)
+  @Column(name = "registration_url_added_by")
+  private String registrationUrlAddedBy;
+
+  @Column(name = "registration_url_added_date")
+  private LocalDateTime registrationUrlAddedDate;
+
   @PositiveOrZero
   @Column(name = "age_from")
   private Short ageFrom;
