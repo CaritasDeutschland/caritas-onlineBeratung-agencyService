@@ -18,6 +18,8 @@ import de.caritas.cob.agencyservice.api.repository.agency.AgencyRepository;
 import de.caritas.cob.agencyservice.api.tenant.TenantContext;
 import de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.ExtendedConsultingTypeResponseDTO;
 import de.caritas.cob.agencyservice.tenantservice.generated.web.model.RestrictedTenantDTO;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -63,7 +65,7 @@ public class AgencyService {
   @Value("${feature.multitenancy.with.single.domain.enabled}")
   private boolean multitenancyWithSingleDomain;
 
-  /** only URLs containing this domain may be used as a registration redirect. */
+  /** the registration redirect URL must point at this domain or a subdomain of it. */
   private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
 
   /**
@@ -353,11 +355,37 @@ public class AgencyService {
     this.agencyRepository.save(agency);
   }
 
+  /**
+   * Accepts only an absolute {@code https} URL without user-info whose host is exactly
+   * {@value #ALLOWED_REGISTRATION_DOMAIN} or a subdomain of it. This rejects look-alike bypasses
+   * such as {@code https://caritas-onlineberatung.de.evil.com}, {@code
+   * https://evil-caritas-onlineberatung.de}, {@code https://evil.com/caritas-onlineberatung.de} and
+   * {@code https://caritas-onlineberatung.de@evil.com}.
+   */
   private void validateRegistrationUrl(String registrationUrl) {
-    if (!registrationUrl.toLowerCase().contains(ALLOWED_REGISTRATION_DOMAIN)) {
+    if (!isValidRegistrationUrl(registrationUrl)) {
       throw new BadRequestException(String.format(
-          "Registration url must contain the domain %s", ALLOWED_REGISTRATION_DOMAIN));
+          "Registration url must be an https URL on the domain %s", ALLOWED_REGISTRATION_DOMAIN));
     }
+  }
+
+  private boolean isValidRegistrationUrl(String registrationUrl) {
+    final URI uri;
+    try {
+      uri = new URI(registrationUrl.trim());
+    } catch (URISyntaxException e) {
+      return false;
+    }
+    if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getRawUserInfo() != null) {
+      return false;
+    }
+    var host = uri.getHost();
+    if (host == null) {
+      return false;
+    }
+    host = host.toLowerCase();
+    return host.equals(ALLOWED_REGISTRATION_DOMAIN)
+        || host.endsWith("." + ALLOWED_REGISTRATION_DOMAIN);
   }
 
 }

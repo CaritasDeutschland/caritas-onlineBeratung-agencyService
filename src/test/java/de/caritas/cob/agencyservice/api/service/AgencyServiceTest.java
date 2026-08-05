@@ -359,6 +359,43 @@ public class AgencyServiceTest {
   }
 
   @Test
+  public void setRegistrationUrl_Should_throwBadRequest_When_urlIsLookAlikeBypass() {
+    var bypasses =
+        new String[] {
+          "caritas-onlineberatung.de",
+          "http://caritas-onlineberatung.de",
+          "https://caritas-onlineberatung.de.something-bad.com",
+          "https://something-bad-caritas-onlineberatung.de",
+          "https://something-bad.com/caritas-onlineberatung.de",
+          "https://caritas-onlineberatung.de@something-bad.com",
+          "https://caritas-onlineberatung.de:@something-bad.com"
+        };
+    for (var url : bypasses) {
+      try {
+        this.agencyService.setRegistrationUrl(AGENCY_ID, url, CONSULTANT_ID);
+        fail("expected BadRequestException for " + url);
+      } catch (BadRequestException expected) {
+        // expected
+      }
+    }
+    verify(agencyRepository, Mockito.never()).save(any());
+  }
+
+  @Test
+  public void setRegistrationUrl_Should_persist_When_urlIsSubdomain() {
+    // given
+    var agency = new EasyRandom().nextObject(Agency.class);
+    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
+
+    // when
+    this.agencyService.setRegistrationUrl(
+        AGENCY_ID, "https://beratung.caritas-onlineberatung.de/registration", CONSULTANT_ID);
+
+    // then
+    verify(agencyRepository).save(any());
+  }
+
+  @Test
   public void setRegistrationUrl_Should_clearUrlButKeepAttribution_When_urlIsBlank() {
     // given
     var agency = new EasyRandom().nextObject(Agency.class);
