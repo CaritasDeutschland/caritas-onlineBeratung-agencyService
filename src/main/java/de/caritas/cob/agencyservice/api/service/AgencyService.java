@@ -18,6 +18,8 @@ import de.caritas.cob.agencyservice.api.repository.agency.AgencyRepository;
 import de.caritas.cob.agencyservice.api.tenant.TenantContext;
 import de.caritas.cob.agencyservice.consultingtypeservice.generated.web.model.ExtendedConsultingTypeResponseDTO;
 import de.caritas.cob.agencyservice.tenantservice.generated.web.model.RestrictedTenantDTO;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -62,6 +64,9 @@ public class AgencyService {
 
   @Value("${feature.multitenancy.with.single.domain.enabled}")
   private boolean multitenancyWithSingleDomain;
+
+  /** the registration redirect URL must point at this domain or a subdomain of it. */
+  private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
 
   /**
    * Returns a list of {@link AgencyResponseDTO} which match the provided agencyIds.
@@ -283,7 +288,8 @@ public class AgencyService {
         .teamAgency(agency.isTeamAgency())
         .offline(agency.isOffline())
         .tenantId(agency.getTenantId())
-        .consultingType(agency.getConsultingTypeId());
+        .consultingType(agency.getConsultingTypeId())
+        .registrationUrl(agency.getRegistrationUrl());
   }
 
 
@@ -319,6 +325,67 @@ public class AgencyService {
     agency.setOffline(true);
     agency.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
     this.agencyRepository.save(agency);
+  }
+
+  /**
+   * Sets, updates or removes the shared registration redirect URL of an agency. When a
+   * URL is provided it must contain the domain {@value #ALLOWED_REGISTRATION_DOMAIN}. A {@code
+   * null}/blank URL removes the override, but - unlike a hard delete - the attribution
+   * ({@code registration_url_added_by}) and the date ({@code registration_url_added_date}) are kept
+   * up to date so it stays visible that a URL was once set and later removed. Membership of the
+   * requesting consultant is verified upstream in the userService.
+   *
+   * @param agencyId        the agency to update
+   * @param registrationUrl the new URL, or {@code null}/blank to remove the override
+   * @param addedBy         the consultant id (UUID) that set/removed the URL, forwarded by the
+   *                        userService
+   */
+  public void setRegistrationUrl(Long agencyId, String registrationUrl, String addedBy) {
+    var isRemoval = registrationUrl == null || registrationUrl.isBlank();
+    if (!isRemoval) {
+      validateRegistrationUrl(registrationUrl);
+    }
+    var agency = this.agencyRepository.findById(agencyId)
+        .orElseThrow(NotFoundException::new);
+    agency.setRegistrationUrl(isRemoval ? null : registrationUrl.trim());
+    // record who last set/removed the URL and when, also on removal.
+    agency.setRegistrationUrlAddedBy(addedBy);
+    agency.setRegistrationUrlAddedDate(LocalDateTime.now(ZoneOffset.UTC));
+    agency.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
+    this.agencyRepository.save(agency);
+  }
+
+  /**
+   * Accepts only an absolute {@code https} URL without user-info whose host is exactly
+   * {@value #ALLOWED_REGISTRATION_DOMAIN} or a subdomain of it. This rejects look-alike bypasses
+   * such as {@code https://caritas-onlineberatung.de.evil.com}, {@code
+   * https://evil-caritas-onlineberatung.de}, {@code https://evil.com/caritas-onlineberatung.de} and
+   * {@code https://caritas-onlineberatung.de@evil.com}.
+   */
+  private void validateRegistrationUrl(String registrationUrl) {
+    if (!isValidRegistrationUrl(registrationUrl)) {
+      throw new BadRequestException(String.format(
+          "Registration url must be an https URL on the domain %s", ALLOWED_REGISTRATION_DOMAIN));
+    }
+  }
+
+  private boolean isValidRegistrationUrl(String registrationUrl) {
+    final URI uri;
+    try {
+      uri = new URI(registrationUrl.trim());
+    } catch (URISyntaxException e) {
+      return false;
+    }
+    if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getRawUserInfo() != null) {
+      return false;
+    }
+    var host = uri.getHost();
+    if (host == null) {
+      return false;
+    }
+    host = host.toLowerCase();
+    return host.equals(ALLOWED_REGISTRATION_DOMAIN)
+        || host.endsWith("." + ALLOWED_REGISTRATION_DOMAIN);
   }
 
 }
