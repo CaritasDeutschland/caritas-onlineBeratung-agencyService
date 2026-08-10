@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.17.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.16.1...v1.17.0) (2026-08-10)
+
+
+### Features
+
+* CARITAS-976 ([10e557d](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/10e557d6077942942ab81cdd5d1fdd0e8365d664))
+* CARITAS-976 ([0932dd1](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/0932dd1c7107a1357a195f28077e2349224db398))
+
+
+### Bug Fixes
+
+* CARITAS-976 ([69a2219](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/69a221920abbf6c42c57c23f983d13570d3c4059))
+* CARITAS-976 ([5538932](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/commit/553893238f78ec4bc7a58f2740e327bc5000a7d2))
+
 ### [1.16.1](https://github.com/CaritasDeutschland/caritas-onlineBeratung-agencyService/compare/v1.16.0...v1.16.1) (2026-06-15)
 
 
