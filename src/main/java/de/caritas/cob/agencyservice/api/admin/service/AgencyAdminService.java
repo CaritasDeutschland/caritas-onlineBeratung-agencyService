@@ -165,7 +165,11 @@ public class AgencyAdminService {
         .isExternal(updateAgencyDTO.getExternal())
         .createDate(agency.getCreateDate())
         .updateDate(LocalDateTime.now(ZoneOffset.UTC))
-        .deleteDate(agency.getDeleteDate());
+        .deleteDate(agency.getDeleteDate())
+        // the registration redirect is managed by consultants, not via the admin update: keep it
+        .registrationUrl(agency.getRegistrationUrl())
+        .registrationUrlAddedBy(agency.getRegistrationUrlAddedBy())
+        .registrationUrlAddedDate(agency.getRegistrationUrlAddedDate());
 
     if (nonNull(updateAgencyDTO.getConsultingType())) {
       agencyBuilder.consultingTypeId(updateAgencyDTO.getConsultingType());
