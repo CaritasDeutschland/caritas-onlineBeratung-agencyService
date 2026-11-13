@@ -2,6 +2,7 @@ package de.caritas.cob.agencyservice.config;
 
 import static de.caritas.cob.agencyservice.api.authorization.Authority.AGENCY_ADMIN;
 import static de.caritas.cob.agencyservice.api.authorization.Authority.RESTRICTED_AGENCY_ADMIN;
+import static de.caritas.cob.agencyservice.api.authorization.Authority.TECHNICAL;
 
 import de.caritas.cob.agencyservice.api.authorization.RoleAuthorizationAuthorityMapper;
 import de.caritas.cob.agencyservice.filter.HttpTenantFilter;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -85,6 +87,10 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
     httpSecurity.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .sessionAuthenticationStrategy(sessionAuthenticationStrategy()).and().authorizeRequests()
+        // must precede the public /agencies/** rule: only the userService (technical user) may
+        // change an agency's registration redirect URL, after verifying consultant membership
+        .antMatchers(HttpMethod.PUT, "/agencies/*/registration-url")
+        .hasAuthority(TECHNICAL.getAuthority())
         .antMatchers("/agencies/**").permitAll()
         .antMatchers(WHITE_LIST).permitAll()
         .antMatchers("/agencies").permitAll()
