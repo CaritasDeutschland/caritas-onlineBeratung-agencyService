@@ -112,6 +112,28 @@ class AgencyAdminServiceTest {
   }
 
   @Test
+  void updateAgency_Should_PreserveRegistrationUrlFields_WhenAgencyIsFound() {
+    var agency = this.easyRandom.nextObject(Agency.class);
+    agency.setRegistrationUrl("https://caritas-onlineberatung.de/registration/agency");
+    agency.setRegistrationUrlAddedBy("aadc0ecf-c048-4bfc-857d-8c9b2e425500");
+    var addedDate = java.time.LocalDateTime.of(2026, 1, 2, 3, 4, 5);
+    agency.setRegistrationUrlAddedDate(addedDate);
+    when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));
+    when(agencyRepository.save(any())).thenReturn(agency);
+
+    var updateAgencyDTO = this.easyRandom.nextObject(UpdateAgencyDTO.class);
+    updateAgencyDTO.setConsultingType(null);
+    agencyAdminService.updateAgency(AGENCY_ID, updateAgencyDTO);
+
+    verify(agencyRepository).save(agencyArgumentCaptor.capture());
+    var savedAgency = agencyArgumentCaptor.getValue();
+    assertEquals(
+        "https://caritas-onlineberatung.de/registration/agency", savedAgency.getRegistrationUrl());
+    assertEquals("aadc0ecf-c048-4bfc-857d-8c9b2e425500", savedAgency.getRegistrationUrlAddedBy());
+    assertEquals(addedDate, savedAgency.getRegistrationUrlAddedDate());
+  }
+
+  @Test
   void updateAgency_Should_SaveOptionalAgencyChanges_WhenAgencyIsFound() {
     var agency = easyRandom.nextObject(Agency.class);
     when(agencyRepository.findById(AGENCY_ID)).thenReturn(Optional.of(agency));

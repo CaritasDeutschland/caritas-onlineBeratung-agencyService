@@ -38,4 +38,12 @@ public class AuthorityTest {
     assertThat(authority, is(AGENCY_ADMIN));
   }
 
+  @Test
+  public void fromRoleName_Should_returnTechnical_When_roleNameIsTechnical() {
+    Authority authority = fromRoleName("technical");
+
+    assertThat(authority, is(Authority.TECHNICAL));
+    assertThat(authority.getAuthority(), is("AUTHORIZATION_TECHNICAL_DEFAULT"));
+  }
+
 }
